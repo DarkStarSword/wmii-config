@@ -1,0 +1,110 @@
+#!/bin/bash
+
+#If ibam is installed, use it for more accurate estimates:
+ibam=`which ibam`
+pidfile=~/.battery.pid
+
+#This is why this is a _bash_ script:
+full=(":-)" ":-)" ":-)" ":-)" ";-)")
+charging=("___" "_-_" "_+_" "-+-" "+++" "+^+" "^^^" "^^^" "^^^")
+draining=("---" "_--" "__-" "___" "___" "___")
+warning=("!---!" "!_--!" "!__-!" "!___!" "!___!" "!___!")
+critical=("!'''!" "!!!!!")
+
+WMIINORMCOLORS="#888888 #222222 #333333"
+fullcolours="#88bb88 #223322 #333333"
+warncolours="#ffcc88 #222222 #333333"
+critcolours1="#888888 #442222 #333333"
+critcolours2="#ffcc88 #443322 #333333"
+colours="$WMIINORMCOLORS"
+
+state='cat /proc/acpi/battery/BAT0/state'
+info='cat /proc/acpi/battery/BAT0/info'
+
+battery() {
+  if [ `$state|awk '/^present:/ {print $2}'` == no ]; then
+    echo -n "$colours no battery"
+    return
+  fi
+
+  presentrate=`$state|awk '/^present rate:/ {print $3}'`
+
+  if [ $ibam ]; then
+  #if false; then  #DEBUG
+    percent=`$ibam --percentbattery|awk '/^Battery percentage/ {print $3}'`
+    charge=`$ibam|awk '/^Charge time left/ {print $4}'`
+    battery=`$ibam|awk '/^Battery time left/ {print $4}'`
+  else
+    chargingstate=`$state|awk '/^charging state:/ {print $3}'`
+    remainingcapacity=`$state|awk '/^remaining capacity:/ {print $3}'`
+    designcapacity=`$info|awk '/^design capacity:/ {print $3}'`
+    lastfullcapacity=`$info|awk '/^last full capacity:/ {print $4}'`
+
+    #percent=$[ $remainingcapacity * 100 / $designcapacity ]
+    percent=$[ $remainingcapacity * 100 / $lastfullcapacity ]
+
+    if [ $chargingstate == "discharging" ]; then
+      seconds=$[ $remainingcapacity*60*60 / $presentrate ]
+      hours=$[ $seconds/60/60 ]
+      minutes=$[ $seconds/60%60 ]
+      seconds=$[ $seconds%60 ]
+      battery=`printf %i:%.2i:%.2i $hours $minutes $seconds`
+    elif [ $chargingstate == "charging" ]; then
+      seconds=$[ ($lastfullcapacity-$remainingcapacity)*60*60 / $presentrate ]
+      hours=$[ $seconds/60/60 ]
+      minutes=$[ $seconds/60%60 ]
+      seconds=$[ $seconds%60 ]
+      charge=`printf %i:%.2i:%.2i $hours $minutes $seconds`
+    fi
+  fi
+  
+  if [ $charge ]; then
+    phase=$[ `date +%s` % ${#charging[*]} ]
+    anim=${charging[phase]}
+  elif [ $battery ]; then
+    phase=$[ `date +%s` % ${#draining[*]} ]
+    anim=${draining[phase]}
+    if [ `echo $battery|awk -F: '{print $1}'` -eq 0 ]; then
+      if [ `echo $battery|awk -F: '{print $2}'` -le 5 ]; then
+        phase=$[ `date +%s` % ${#critical[*]} ]
+        anim=${critical[phase]}
+        if [ $phase -eq 0 ]; then
+            colours="$critcolours1"
+        else
+            colours="$critcolours2"
+        fi
+      elif [ `echo $battery|awk -F: '{print $2}'` -le 15 ]; then
+        phase=$[ `date +%s` % ${#warning[*]} ]
+        anim=${warning[phase]}
+        colours="$warncolours"
+      fi
+    fi
+  elif [ $percent -eq 100 ]; then
+    phase=$[ `date +%s` % ${#full[*]} ]
+    anim=${full[phase]}
+    colours="$fullcolours"
+  fi
+
+  if [ $charge$battery ]; then
+    echo -n "$colours $percent% (${charge}${battery} @ ${presentrate}mW) $anim"
+  else
+    echo -n "$colours $percent% $anim"
+  fi
+}
+
+#set +xv
+echo "$WMII_NORMCOLORS" | wmiir create /rbar/aaa
+if [ -z $ibam ]; then
+  echo "$warncolours ibam is not installed - battery estimate will be less reliable" | wmiir create /rbar/batteryz
+  sleep 2
+fi
+if wmiir remove /rbar/battery 2>/dev/null; then
+  kill `cat $pidfile` 2>/dev/null
+fi
+echo $$ > $pidfile
+wmiir remove /rbar/batteryz 2>/dev/null
+echo "$WMII_NORMCOLORS" | wmiir create /rbar/battery
+while battery | wmiir write /rbar/battery; do
+	sleep 1
+done
+rm $pidfile

@@ -1,0 +1,894 @@
+#!/bin/sh -f
+#   vi:noet:ts=2:sw=2:ai
+# Configure wmii
+wmiiscript=wmiirc # For wmii.sh
+. wmii.sh
+
+export EDITOR=vim
+
+# Configuration Variables
+MODKEY=Mod4  #Win
+UP=k
+DOWN=j
+LEFT=h
+RIGHT=l
+
+# Bars
+noticetimeout=5
+noticebar=/rbar/!notice
+
+BACKGROUND_IMAGE="$HOME/desktop.jpg"
+PDFPATH="$HOME:$HOME/pdf"
+
+#When directly adjusting the mixer, which control to use:
+VOLUME_MIXER_CONTROL=Master
+#Accessed with Shift+FX86Volume...
+VOLUME_MIXER_CONTROL2=PCM
+#How much to adjust the volume by when a volume key is pressed:
+VOLUME_DIFF=2
+
+# Preferred applications:
+
+WMII_TERM="x-terminal-emulator"
+
+# for an application stored in the variable APP:
+#  APP_ARGS may be created to specify the optional arguments
+#  APP_TERMINAL if it exists and is not an empty string specifies that the application should run in a terminal
+
+#Only cmus and mocp are supported to remote control with the MODKEY+z,x,c,v,b,-,+,<F8> and <F9> keys
+MUSICPLAYER="cmus"
+MUSICPLAYER_TERMINAL=1
+
+# Local cmus instance will be used if it is running, otherwise this remote server will be tried:
+CMUS_SERVER="127.0.0.1:32390" #Run remote server with 'cmus --listen 0.0.0.0:32390'
+CMUS_PASSWD="CMUSRocks"         #Set on remote with :set passwd=CMUSRocks
+
+MUSICPLAYER2="mocp"
+MUSICPLAYER2_TERMINAL=1
+
+WEBBROWSER="iceweasel"
+
+QUICKWEBBROWSER="w3m"
+QUICKWEBBROWSER_ARGS="http://www.google.com"
+QUICKWEBBROWSER_TERMINAL=1
+
+EMAILCLIENT="sup-mail"
+EMAILCLIENT_TERMINAL=1
+
+NEWSREADER="canto"
+NEWSREADER_TERMINAL=1
+
+IRCCLIENT="irssi"
+IRCCLIENT_TERMINAL=1
+
+NETWORKMANAGER="wicd-curses"
+NETWORKMANAGER_TERMINAL=1
+
+# MOVED TO PYTHON
+# IMCLIENT="finch"
+# IMCLIENT_TERMINAL=1
+
+# Preferred calculator program, will fall back and try some alternatives if it isn't found:
+#CALCULATOR="mathomatic"
+#CALCULATOR_TERMINAL=1
+
+CALENDAR="sleep 0.1;wyrd" # wyrd seems to have a race condition when started with a new xterm, likely related to window resizing, causing it to crash often.
+CALENDAR_TERMINAL=1       # Note: this is ignored. See launchCalendar
+
+# Colors tuples: "<text> <background> <border>"
+# WMII_NORMCOLORS='#888888 #222222 #333333'
+# WMII_FOCUSCOLORS='#ffffff #285577 #4c7899'
+export WMII_NORMCOLORS='#000000 #c1c48b #81654f'
+export WMII_FOCUSCOLORS='#000000 #81654f #000000'
+
+export WMII_BACKGROUND='#333333'
+export WMII_FONT='-*-fixed-medium-r-*-*-13-*-*-*-*-*-*-*'
+
+set -- $(echo $WMII_NORMCOLORS $WMII_FOCUSCOLORS)
+export WMII_TERM="x-terminal-emulator"
+
+echo "${WMII_CONFPATH%%:*}"
+if ! test -d "${WMII_CONFPATH%%:*}"; then
+    mkdir "${WMII_CONFPATH%%:*}"
+    res=$(wihack -type DIALOG xmessage -nearmouse -buttons Windows,Alt -print -fn $WMII_FONT \
+          "Welcome to wmii,$wi_newline$wi_newline" \
+          "Most of wmii's default key bindings make use of the$wi_newline" \
+          "Windows key, or equivalent. For keyboards lacking such$wi_newline" \
+          "a key, many users change this to the Alt key.$wi_newline$wi_newline" \
+          "Which would you prefer?")
+    [ "$res" = "Alt" ] && MODKEY=Mod1
+    echo "MODKEY=$MODKEY" >"${WMII_CONFPATH%%:*}/wmiirc_local"
+    chmod +x "${WMII_CONFPATH%%:*}/wmiirc_local"
+fi
+
+# Menu history
+hist="${WMII_CONFPATH%%:*}/history"
+histnum=5000
+
+# Column Rules
+wmiir write /colrules <<!
+/gimp/ -> 17+83+41
+/.*/ -> 62+38 # Golden Ratio
+!
+
+# Tagging Rules
+wmiir write /tagrules <<!
+/MPlayer|VLC/ -> ~
+!
+
+# Status Bar Info
+status()
+{
+	echo -n $(uptime | sed 's/.*://; s/,//g') '|' $(date)
+}
+
+local_events() { true;}
+wi_runconf -s wmiirc_local
+
+echo $WMII_NORMCOLORS | wmiir create $noticebar
+
+# Event processing
+events()
+{
+	cat <<'!'
+# Events
+Event CreateTag
+	echo "$WMII_NORMCOLORS" "$@" | wmiir create "/lbar/$@"
+Event DestroyTag
+	wmiir remove "/lbar/$@"
+Event FocusTag
+	wmiir xwrite "/lbar/$@" "$WMII_FOCUSCOLORS" "$@"
+Event UnfocusTag
+	wmiir xwrite "/lbar/$@" "$WMII_NORMCOLORS" "$@"
+Event UrgentTag
+	shift
+	wmiir xwrite "/lbar/$@" "*$@"
+Event NotUrgentTag
+	shift
+	wmiir xwrite "/lbar/$@" "$@"
+Event LeftBarClick LeftBarDND
+	shift
+	wmiir xwrite /ctl view "$@"
+Event Unresponsive
+	{
+		client=$1; shift
+		msg="The following client is not responding. What would you like to do?$wi_newline"
+		resp=$(wihack -transient $client \
+			      xmessage -nearmouse -buttons Kill,Wait -print
+			      -fn "${WMII_FONT%%,*}" "$msg $(wmiir read /client/sel/label)")
+		if [ "$resp" = Kill ]; then
+			wmiir xwrite /client/$client/ctl slay &
+		fi
+	}&
+Event Notice
+	wmiir xwrite $noticebar $wi_arg
+
+	kill $xpid 2>/dev/null # Let's hope this isn't reused...
+	{ sleep $noticetimeout; wmiir xwrite $noticebar ' '; }&
+	xpid = $!
+
+# Menus
+Menu Client-3-Delete
+	wmiir xwrite /client/$1/ctl kill
+Menu Client-3-Kill
+	wmiir xwrite /client/$1/ctl slay
+Menu Client-3-Fullscreen
+	wmiir xwrite /client/$1/ctl Fullscreen on
+Event ClientMouseDown
+	wi_fnmenu Client $2 $1 &
+
+Menu LBar-3-Delete
+	tag=$1; clients=$(wmiir read "/tag/$tag/index" | awk '/[^#]/{print $2}')
+	for c in $clients; do
+		if [ "$tag" = "$(wmiir read /client/$c/tags)" ]; then
+			wmiir xwrite /client/$c/ctl kill
+		else
+			wmiir xwrite /client/$c/tags -$tag
+		fi
+		if [ "$tag" = "$(wi_seltag)" ]; then
+			newtag=$(wi_tags | awk -v't='$tag '
+				$1 == t { if(!l) getline l
+					  print l
+					  exit }
+				{ l = $0 }')
+			wmiir xwrite /ctl view $newtag
+		fi
+	done
+Event LeftBarMouseDown
+	wi_fnmenu LBar "$@" &
+
+# Actions
+Action showkeys
+	echo "$KeysHelp" | xmessage -file - -fn ${WMII_FONT%%,*}
+Action quit
+	wmiir xwrite /ctl quit
+Action exec
+	wmiir xwrite /ctl exec "$@"
+Action rehash
+	wi_proglist $PATH >$progsfile
+Action status
+	set +xv
+	if wmiir remove /rbar/status 2>/dev/null; then
+		sleep 2
+	fi
+	echo "$WMII_NORMCOLORS" | wmiir create /rbar/status
+	while status | wmiir write /rbar/status; do
+		sleep 1
+	done
+
+# Key Bindings
+KeyGroup Moving around
+Key $MODKEY-$LEFT   # Select the client to the left
+	wmiir xwrite /tag/sel/ctl select left
+Key $MODKEY-$RIGHT  # Select the client to the right
+	wmiir xwrite /tag/sel/ctl select right
+Key $MODKEY-$UP     # Select the client above
+	wmiir xwrite /tag/sel/ctl select up
+Key $MODKEY-$DOWN   # Select the client below
+	wmiir xwrite /tag/sel/ctl select down
+
+Key $MODKEY-space   # Toggle between floating and managed layers
+	wmiir xwrite /tag/sel/ctl select toggle
+
+KeyGroup Moving through stacks
+Key $MODKEY-Control-$UP    # Select the stack above
+	wmiir xwrite /tag/sel/ctl select up stack
+Key $MODKEY-Control-$DOWN  # Select the stack below
+	wmiir xwrite /tag/sel/ctl select down stack
+
+KeyGroup Moving clients around
+Key $MODKEY-Shift-$LEFT   # Move selected client to the left
+	wmiir xwrite /tag/sel/ctl send sel left
+Key $MODKEY-Shift-$RIGHT  # Move selected client to the right
+	wmiir xwrite /tag/sel/ctl send sel right
+Key $MODKEY-Shift-$UP     # Move selected client up
+	wmiir xwrite /tag/sel/ctl send sel up
+Key $MODKEY-Shift-$DOWN   # Move selected client down
+	wmiir xwrite /tag/sel/ctl send sel down
+
+Key $MODKEY-Shift-space   # Toggle selected client between floating and managed layers
+	wmiir xwrite /tag/sel/ctl send sel toggle
+
+KeyGroup Client actions
+Key $MODKEY-f # Toggle selected client's fullsceen state
+	wmiir xwrite /client/sel/ctl Fullscreen toggle
+Key $MODKEY-Shift-c # Close client
+	wmiir xwrite /client/sel/ctl kill
+
+KeyGroup Changing column modes
+Key $MODKEY-d # Set column to default mode
+	wmiir xwrite /tag/sel/ctl colmode sel default-max
+Key $MODKEY-s # Set column to stack mode
+	wmiir xwrite /tag/sel/ctl colmode sel stack-max
+Key $MODKEY-m # Set column to max mode
+	wmiir xwrite /tag/sel/ctl colmode sel stack+max
+
+KeyGroup Running programs
+Key $MODKEY-Shift-a      # Open wmii actions menu
+	action $(wi_actions | wimenu -h "${hist}.actions" -n $histnum) &
+Key $MODKEY-p      # Open program menu
+	eval wmiir setsid "$(wimenu -h "${hist}.progs" -n $histnum <$progsfile)" &
+
+Key $MODKEY-Return # Launch a terminal
+	eval wmiir setsid $WMII_TERM &
+
+KeyGroup Other
+Key $MODKEY-Control-t # Toggle all other key bindings
+	case $(wmiir read /keys | wc -l | tr -d ' \t\n') in
+	0|1)
+		echo -n "$Keys" | wmiir write /keys
+		wmiir xwrite /ctl grabmod $MODKEY;;
+	*)
+		wmiir xwrite /keys $MODKEY-Control-t
+		wmiir xwrite /ctl grabmod Mod3;;
+	esac
+
+KeyGroup Tag actions
+Key $MODKEY-t       # Change to another tag
+	(tag=$(wi_tags | wimenu -h "${hist}.tags" -n 50) && wmiir xwrite /ctl view $tag) &
+Key $MODKEY-Shift-t # Retag the selected client
+	c=$(wi_selclient)
+	(tag=$(wi_tags | wimenu -h "${hist}.tags" -n 50) && wmiir xwrite /client/$c/tags $tag) &
+!
+	for i in 0 1 2 3 4 5 6 7 8 9; do
+		cat <<!
+Key $MODKEY-$i		 # Move to the numbered view
+	wmiir xwrite /ctl view "$i"
+Key $MODKEY-Shift-$i     # Retag selected client with the numbered tag
+	wmiir xwrite /client/sel/tags "$i"
+!
+	done
+
+		cat <<!
+KeyGroup Ian's custom keys
+Key XF86AudioLowerVolume
+	volumeDown "$VOLUME_MIXER_CONTROL"
+Key XF86AudioRaiseVolume
+	volumeUp "$VOLUME_MIXER_CONTROL"
+Key XF86AudioMute
+	volumeMute "$VOLUME_MIXER_CONTROL"
+Key Shift-XF86AudioLowerVolume
+	volumeDown "$VOLUME_MIXER_CONTROL2"
+Key Shift-XF86AudioRaiseVolume
+	volumeUp "$VOLUME_MIXER_CONTROL2"
+Key Shift-XF86AudioMute
+	volumeMute "$VOLUME_MIXER_CONTROL2"
+Key $MODKEY-XF86AudioLowerVolume
+	musicPlayerCommand "Volume Down"
+Key $MODKEY-XF86AudioRaiseVolume
+	musicPlayerCommand "Volume Up"
+Key $MODKEY-XF86AudioMute
+	volumeMute "$VOLUME_MIXER_CONTROL"
+Key XF86AudioPlay
+	musicPlayerCommand "Play/Pause"
+Key XF86AudioStop
+	musicPlayerCommand "Stop"
+Key XF86AudioPrev
+	musicPlayerCommand "Previous Track"
+Key XF86AudioNext
+	musicPlayerCommand "Next Track"
+Key XF86Eject
+	displayStatus 'FIXME: smart eject'
+	eject
+Key XF86Calculator
+	launchCalculator
+Key XF86HomePage
+	launchWebBrowser
+Key XF86Mail
+	launchEmailClient
+Key XF86ScreenSaver
+	lockScreen
+Key XF86Display
+	displayStatus `date +"%T"`" XF86Display Pressed" 10
+Key XF86TouchpadToggle
+	displayStatus 'FIXME: Toggle touchpad'
+
+Key $MODKEY-escape
+	displayStatus Escape
+Key $MODKEY-grave
+	toggleAutoLock
+Key $MODKEY-F1
+	toggleAutoSuspend
+# Key $MODKEY-F2 unused
+Key $MODKEY-F3
+	blankScreen
+Key $MODKEY-F4
+	toggleScreenBlanking
+#Key $MODKEY-F5
+#	toggleExternalDisplay
+#Key $MODKEY-F6
+#	presentationMode
+# Key $MODKEY-F7 unused
+Key $MODKEY-F8
+	# Same as -
+	musicPlayerCommand "Volume Down"
+Key $MODKEY-F9
+	# Same as +
+	musicPlayerCommand "Volume Up"
+# Key $MODKEY-F10 unused
+# Key $MODKEY-F11 unused
+# Key $MODKEY-F12 unused
+# Key $MODKEY-0-9 are default wmii keys, defined below
+Key $MODKEY-minus
+	# Same as F8
+	musicPlayerCommand "Volume Down"
+Key $MODKEY-plus
+	# Same as F9
+	musicPlayerCommand "Volume Up"
+Key $MODKEY-q
+	launchQuickWebBrowser
+Key $MODKEY-w
+	launchWebBrowser
+Key $MODKEY-e
+	launchEmailClient
+Key $MODKEY-r
+	launchNewsReader
+# Key $MODKEY-t is a default wmii key, defined above
+Key $MODKEY-y
+	launchPython
+Key $MODKEY-u
+	launchMusicPlayer
+Key $MODKEY-i
+	launchIRCClient
+Key $MODKEY-o
+	launch2ndMusicPlayer
+# Key $MODKEY-p is a default wmii key, defined above
+# Key $MODKEY-a FUNCTIONALITY MOVED TO PYTHON
+	# launchIMClient
+# Key $MODKEY-s is a default wmii key, defined above
+# Key $MODKEY-d is a default wmii key, defined above
+# Key $MODKEY-f is a default wmii key, defined above
+Key $MODKEY-g
+	launchCalendar
+# Key $MODKEY-h is a default wmii key, defined above
+# Key $MODKEY-j is a default wmii key, defined above
+# Key $MODKEY-k is a default wmii key, defined above
+# Key $MODKEY-l is a default wmii key, defined above
+Key Mod1-Control-l
+	lockScreen
+Key $MODKEY-z
+	musicPlayerCommand "Previous Track"
+Key $MODKEY-x
+	musicPlayerCommand "Play"
+Key $MODKEY-c
+	musicPlayerCommand "Play/Pause"
+Key $MODKEY-v
+	musicPlayerCommand "Stop"
+Key $MODKEY-b
+	musicPlayerCommand "Next Track"
+Key $MODKEY-n
+	launchNetworkManager
+# Key $MODKEY-m is a default wmii key, defined above
+Key $MODKEY-slash
+	launchCalculator
+Key Caps_Lock
+	updateCapsLockDisplay
+Key Num_Lock
+	updateNumLockDisplay
+!
+}
+wi_events events local_events
+
+# WM Configuration
+wmiir write /ctl << !
+	font $WMII_FONT
+	focuscolors $WMII_FOCUSCOLORS
+	normcolors $WMII_NORMCOLORS
+	grabmod $MODKEY
+	border 1
+!
+#Set the background
+if which feh >/dev/null && [ -f "$BACKGROUND_IMAGE" ]; then
+	feh --bg-scale "$BACKGROUND_IMAGE" &
+else
+	xsetroot -solid "$WMII_BACKGROUND" &
+fi
+
+# Misc
+progsfile="$(wmiir namespace)/.proglist"
+action status &
+wi_proglist $PATH >$progsfile &
+
+# Setup Tag Bar
+IFS="$wi_newline"
+wmiir rm $(wmiir ls /lbar | sed 's,^,/lbar/,') >/dev/null
+seltag=$(wmiir read /tag/sel/ctl | sed 1q)
+unset IFS
+wi_tags | while read tag
+do
+	if [ "$tag" = "$seltag" ]; then
+		echo "$WMII_FOCUSCOLORS" "$tag"
+	else
+		echo "$WMII_NORMCOLORS" "$tag"
+	fi | wmiir create "/lbar/$tag"
+done
+
+# DarkStarSword's Functions
+
+pdflist()
+{
+	paths=$(echo "$@" | sed 'y/:/ /')
+	ls -lLQ $paths 2>/dev/null \
+		| awk -F\" '$1 ~ /^[^d][^ ]*r[^ ]* / && $2 ~ /\.[pP][dD][fF]$/ && NF > 2 { print $2 }' \
+		| sort | uniq
+}
+
+displayStatus()
+{
+	MESSAGE="$1"
+	DISPLAYTIME="$2"
+	BARFILE="$3"
+	(
+	if [ ! "$DISPLAYTIME" ]; then
+		DISPLAYTIME=5
+	fi
+	if [ ! "$BARFILE" ]; then
+		BARFILE="aaa-"`date '+%s'`"-$RANDOM"
+	else
+		if [ -e "/tmp/wmii-${USER}-${DISPLAY}-status-${BARFILE}" ]; then
+			kill $(cat "/tmp/wmii-${USER}-${DISPLAY}-status-${BARFILE}")
+		fi
+	fi
+	wmiir remove /lbar/"$BARFILE" 2>/dev/null
+	echo "$MESSAGE" | wmiir create /lbar/"$BARFILE"
+	sleep "$DISPLAYTIME"
+	wmiir remove /lbar/"$BARFILE"
+	rm "/tmp/wmii-${USER}-${DISPLAY}-status-${BARFILE}"
+	) &
+	if [ "$BARFILE" ]; then
+		echo `jobs -l %%|head -n 1|awk '{print $2}'` >> "/tmp/wmii-${USER}-${DISPLAY}-status-${BARFILE}"
+	fi
+}
+
+lockScreen()
+{
+	if autoLockEnabled; then
+		xautolock -locknow
+	else
+		enableAutoLock
+		sleep 1
+		xautolock -locknow
+	fi
+}
+autoLockEnabled()
+{
+	if [ -e "/tmp/wmii-${USER}-${DISPLAY}-noautolock" ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+killAutoLockNotifier()
+{
+	autoLockEnabled && return
+	kill $(cat "/tmp/wmii-${USER}-${DISPLAY}-noautolock")
+	rm "/tmp/wmii-${USER}-${DISPLAY}-noautolock"
+}
+enableAutoLock()
+{
+	killAutoLockNotifier
+	xautolock -enable
+	displayStatus "#ccff88 #334422 #333333 LOCK ENABLED" 1 lock
+}
+disableAutoLock()
+{
+	killAutoLockNotifier
+	xautolock -disable
+	(
+	while true; do
+		echo "#ffcc88 #443322 #333333 LOCK DISABLED" | wmiir create /lbar/lock && sleep 2
+		echo "#ffff88 #664422 #333333 ++-8 DISABLED" | wmiir create /lbar/lock && sleep 2
+	done
+	) &
+	echo `jobs -l %%|head -n 1|awk '{print $2}'` >> "/tmp/wmii-${USER}-${DISPLAY}-noautolock"
+}
+toggleAutoLock()
+{
+	if autoLockEnabled; then
+		disableAutoLock
+	else
+		enableAutoLock
+	fi
+}
+
+toggleAutoSuspend()
+{
+	if [ -e /tmp/noautosuspend ]; then
+		rm /tmp/noautosuspend
+		displayStatus "#ccff88 #334422 #333333 AUTO SUSPEND ENABLED" 5 suspend
+	else
+		touch /tmp/noautosuspend
+		displayStatus "#ffcc88 #443322 #333333 AUTO SUSPEND DISABLED" 5 suspend
+	fi
+}
+
+toggleScreenBlanking()
+{
+	# Screen will still blank if xautolock is triggered
+	if ( xset q | grep 'DPMS is Enabled' ); then
+		xset s off
+		xset -dpms
+		displayStatus "#88ccff #224433 #333333 SCREEN BLANKING DISABLED" 5 blank
+	else
+		xset s on
+		xset +dpms
+		displayStatus "#88ffcc #224433 #333333 SCREEN BLANKING ENABLED" 5 blank
+	fi
+}
+
+blankScreen()
+{
+	# Slight delay to give the key a chance to release then blank screen
+	sleep 0.1
+	xset dpms force suspend
+	# Delayed blank in case key release un-blanked screen later than expected
+	sleep 0.5
+	xset dpms force suspend
+	# If the user had their hand on the key longer than that they can retry themselves,
+	# otherwise this script risks becoming truly annoying
+}
+
+toggleExternalDisplay()
+{
+	return
+	#Action display &
+	# Transition between display states:
+	# State 1: Internal only 800x480
+	# State 2: Dual cloned display  640x480
+	# State 3: External only 800x600
+	# If external not attached always transition to Internal only
+
+	echo "Stand by..." | wmiir create /lbar/screen
+	if xrandr | grep '^VGA connected [^(]*x'; then
+		if xrandr | grep '^LVDS connected [^(]*x'; then
+			# Dual display => External only
+			xrandr --output LVDS --off --output VGA --mode 800x600
+		else
+			# Only external active => Internal only
+			xrandr --output LVDS --mode 800x480 --output VGA --off
+			xrandr --delmode VGA 640x480
+		fi
+	elif xrandr | grep '^LVDS connected [^(]*x'; then
+		if xrandr | grep '^VGA connected'; then
+			# Internal active, external attached but inactive => Dual display
+			xrandr --addmode VGA 640x480
+			xrandr --output LVDS --mode 640x480 --output VGA --mode 640x480
+		else
+			# Internal active, external not attached => Internal only
+			xrandr --output LVDS --mode 800x480 --output VGA --off
+			xrandr --delmode VGA 640x480
+		fi
+	else
+		displayStatus "#ffcc88 #443322 #333333 UNRECOGNISED SCREEN CONFIGURATION" 5 screen
+		return 1
+	fi
+	echo -n exec wmii | wmiir write /ctl
+}
+
+presentationMode()
+{
+	(
+	pdflist $PDFPATH >$pdfsfile
+	pdf=$(eval $WMII_MENU <$pdfsfile)
+
+	#FIXME: Extra PDF paths don't work
+
+	if [ -e "$pdf" ]; then
+		Action display "$pdf" &
+		return
+		xautolock -disable
+		xrandr --addmode VGA 640x480
+		xrandr --output LVDS --mode 640x480 --output VGA --mode 640x480
+
+		impressive -t Crossfade -T 100 "$pdf"
+
+		xrandr --output LVDS --mode 800x480 --output VGA --off
+		xrandr --delmode VGA 640x480
+		xautolock -enable
+	fi
+	) &
+}
+
+updateCapsLockDisplay()
+{
+	if [ $((`xset q|awk '/LED/ {print $10}'|cut -c 8` % 2)) -eq 1 ]; then
+		(
+		echo "#ffcc88 #443322 #333333 C" | wmiir create /rbar/acaps
+		# Work around for bug in wmii in which Keys are not received if caps lock is active and num lock is inactive
+		while [ $((`xset q|awk '/LED/ {print $10}'|cut -c 8` % 2)) -eq 1 ]; do sleep 0.1;done
+		wmiir remove /rbar/acaps
+		) &
+	else
+		if [ ! $((`xset q|awk '/LED/ {print $10}'|cut -c 8` % 4 / 2)) -eq 1 ]; then
+			# Notify me if the bug has been fixed
+			displayStatus "#ffcc88 #443322 #333333 Debug: Received caps release notification while num lock was off" 2 caps
+		fi
+	fi
+}
+updateNumLockDisplay()
+{
+	if [ $((`xset q|awk '/LED/ {print $10}'|cut -c 8` % 4 / 2)) -eq 1 ]; then
+		echo "#88ccff #223344 #333333 N" | wmiir create /rbar/anum
+	else
+		wmiir remove /rbar/anum
+	fi
+}
+
+#These adjust the mixer directly, not a music player
+volumeUp()
+{
+	CONTROL="$1"
+	vol=`amixer sset "$CONTROL" ${VOLUME_DIFF}%+ | awk -F\[ '/%/ {print $2}'|head -n 1|awk -F\] '{print $1}'`
+	displayStatus "$CONTROL mixer volume: $vol" 2 mixer
+}
+volumeDown()
+{
+	CONTROL="$1"
+	vol=`amixer sset "$CONTROL" ${VOLUME_DIFF}%- | awk -F\[ '/%/ {print $2}'|head -n 1|awk -F\] '{print $1}'`
+	displayStatus "$CONTROL mixer volume: $vol" 2 mixer
+}
+volumeMute()
+{
+	CONTROL="$1"
+	mute=`amixer sset "$CONTROL" toggle | awk '/\[(on|off)\]/ {print $NF}'|head -n 1|tr -d '[]'`
+	if [ -n "$mute" ]; then
+		displayStatus "$CONTROL mixer: $mute" 2 mixer
+	else
+		displayStatus "$CONTROL mixer does not have a mute control" 2 mixer
+	fi
+}
+
+musicPlayerCmusRunning()
+{
+	if $(cmus-remote -v +0); then
+		CMUS_REMOTE='cmus-remote'
+	elif $(cmus-remote --server $CMUS_SERVER --passwd $CMUS_PASSWD -v +0); then
+		# FIXME: This needs to timeout of < 0.08 sec, but I don't want to deal with
+		# shell compatibility nonsense any more, so the fix is being delayed until
+		# I port the music player control code to python.
+		CMUS_REMOTE="cmus-remote --server $CMUS_SERVER --passwd $CMUS_PASSWD"
+	else
+		return 1
+	fi
+	return 0
+}
+musicPlayerCmusCommand()
+{
+	[ -z $CMUS_REMOTE ] && displayStatus "musicPlayerCmusCommand BUG: CMUS_REMOTE undefined" && return 1
+	COMMAND="$1"
+	case "$COMMAND" in
+		'Previous Track') $CMUS_REMOTE -r ;;
+		'Play')           $CMUS_REMOTE -p ;;
+		'Play/Pause')     $CMUS_REMOTE -u ;;
+		'Stop')           $CMUS_REMOTE -s ;;
+		'Next Track')     $CMUS_REMOTE -n ;;
+		'Volume Down')    $CMUS_REMOTE -v -${VOLUME_DIFF}% ;;
+		'Volume Up')      $CMUS_REMOTE -v +${VOLUME_DIFF}% ;;
+		*) displayStatus "Command $COMMAND not recognised to control music with cmus" ;;
+	esac
+}
+musicPlayerMocpRunning()
+{
+	pidof mocp >/dev/null
+}
+musicPlayerMocpCommand()
+{
+	COMMAND="$1"
+	case "$COMMAND" in
+		'Previous Track') mocp -r ;;
+		'Play')           mocp -p ;;
+		'Play/Pause')
+			state=`mocp -i|grep ^State|awk '{print $2}'`
+			if [ "$state" = "STOP" ]; then
+				mocp -p #Play
+			else
+				mocp -G #Play/Pause
+			fi ;;
+		'Stop')           mocp -s ;;
+		'Next Track')
+			state=`mocp -i|grep ^State|awk '{print $2}'`
+			if [ "$state" = "STOP" ]; then
+				mocp -p #Play
+			else
+				mocp -f #Next
+			fi ;;
+		'Volume Down')    mocp -v -${VOLUME_DIFF} ;;
+		'Volume Up')      mocp -v +${VOLUME_DIFF} ;;
+		*) displayStatus "Command $COMMAND not recognised to control music with mocp" ;;
+	esac
+}
+__musicPlayerCommand()
+{
+	COMMAND="$1"
+	displayStatus "music: $COMMAND" 1 musicplayer
+	if musicPlayerMocpRunning; then
+		musicPlayerMocpCommand "$COMMAND"
+	elif musicPlayerCmusRunning; then
+		musicPlayerCmusCommand "$COMMAND"
+	else
+		case "$COMMAND" in
+			'Volume Down')    volumeDown "$VOLUME_MIXER_CONTROL" ;;
+			'Volume Up')      volumeUp "$VOLUME_MIXER_CONTROL" ;;
+			*) displayStatus "#ffcc88 #443322 #333333 No supported music player is running" 5 musicplayer ;;
+		esac
+	fi
+}
+musicPlayerCommand()
+{
+	COMMAND="$1"
+	__musicPlayerCommand "$COMMAND" &
+}
+
+launchProgram()
+{
+	PROGRAM="$1"
+	ARGS="$2"
+	TERMINAL="$3"
+	FAILSILENT="$4"
+	if which "$PROGRAM" >/dev/null; then
+		displayStatus "Launching $PROGRAM..." 2
+		if [ "$TERMINAL" ]; then
+			$WMII_TERM -e "$PROGRAM" $ARGS &
+		else
+			"$PROGRAM" $ARGS &
+		fi
+		return 0
+	elif [ -z "$FAILSILENT" ]; then
+		displayStatus "#ffcc88 #443322 #333333 Cannot launch $PROGRAM: not found" 5 launchfail
+		return 1
+	fi
+	return 1
+}
+launchProgramVar()
+{
+	# Get the name of the program to run with it's parameters from the passed in variable name
+	VARIABLE=`eval "echo '\$'$1"`
+	PROGRAM=`eval "echo ${VARIABLE}"`
+	ARGS=`eval "echo ${VARIABLE}_ARGS"`
+	TERMINAL=`eval "echo ${VARIABLE}_TERMINAL"`
+	FAILSILENT="$2"
+	[ -n "$PROGRAM" ] || return
+	launchProgram "$PROGRAM" "$ARGS" "$TERMINAL" "$FAILSILENT"
+	# WARN: Return value from launchProgram must be passed on
+}
+
+launchMusicPlayer()
+{
+	launchProgramVar MUSICPLAYER
+}
+launch2ndMusicPlayer()
+{
+	launchProgramVar MUSICPLAYER2
+}
+launchQuickWebBrowser()
+{
+	launchProgramVar QUICKWEBBROWSER
+}
+launchWebBrowser()
+{
+	GDK_NATIVE_WINDOWS=1 iceweasel & # Work around for abobe flash bug
+
+	#launchProgramVar WEBBROWSER && return
+	#launchProgram "iceweasel" "" "" "1" && return
+	#launchProgram "firefox" "" "" "1" && return
+	#displayStatus "#ffcc88 #443322 #333333 No suitable web browser found!" 5 launchfail
+}
+launchEmailClient()
+{
+	launchProgramVar EMAILCLIENT
+}
+launchNewsReader()
+{
+	launchProgramVar NEWSREADER
+}
+launchIRCClient()
+{
+	launchProgramVar IRCCLIENT
+}
+launchNetworkManager()
+{
+	launchProgramVar NETWORKMANAGER
+}
+launchCalculator()
+{
+	launchProgramVar CALCULATOR && return
+	launchProgram "calc" "" "1" "1" && return
+	launchProgram "mathomatic" "" "1" "1" && return
+	launchProgram "ipython" "" "1" "1" && return
+	launchProgram "python" "" "1" "1" && return
+	displayStatus "#ffcc88 #443322 #333333 No suitable calculator program found!" 5 launchfail
+}
+launchCalendar()
+{
+	#launchProgramVar CALENDAR  # This would fail due to $(which 'sleep 0.1;wyrd')
+	$WMII_TERM -e "$CALENDAR" & # See explanation at definition of CALENDAR
+}
+# MOVED TO PYTHON
+# launchIMClient()
+# {
+# 	# TODO: Handle pidgin or finch and do this from the main python script
+# 	Action finch &
+# }
+launchPython()
+{
+	launchProgram "bpython" "" "1" && return
+	launchProgram "ipython" "" "1" && return
+	launchProgram "python" "" "1" && return
+	displayStatus "#ffcc88 #443322 #333333 Python interpreter not found!" 5 launchfail
+}
+
+#Start the screen auto locker
+#FIXME: Add lock warning
+xautolock -time 1 -locker "$HOME/.wmii-3.5/lock" -corners 000- &
+if autoLockEnabled; then
+	enableAutoLock
+else
+	disableAutoLock
+fi
+
+#Start battery monitor
+Action battery &
+
+wmiir xwrite /event 'SHELL DONE'
+
+wi_eventloop
