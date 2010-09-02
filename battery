@@ -18,44 +18,32 @@ critcolours1="#888888 #442222 #333333"
 critcolours2="#ffcc88 #443322 #333333"
 colours="$WMIINORMCOLORS"
 
-state='cat /proc/acpi/battery/BAT0/state'
-info='cat /proc/acpi/battery/BAT0/info'
+sysdir='/sys/class/power_supply/BAT0'
 
 battery() {
-  if [ `$state|awk '/^present:/ {print $2}'` == no ]; then
-    echo -n "$colours no battery"
-    return
-  fi
+  chargingstate=`cat $sysdir/status`
+  remainingcapacity=`cat $sysdir/charge_now`
+  designcapacity=`cat $sysdir/charge_full_design`
+  lastfullcapacity=`cat $sysdir/charge_full`
+  voltage=`cat $sysdir/voltage_now`
+  current=`cat $sysdir/current_now`
+  presentrate=$[($voltage * $current) / 1000000000000]
 
-  presentrate=`$state|awk '/^present rate:/ {print $3}'`
+  #percent=$[ $remainingcapacity * 100 / $designcapacity ]
+  percent=$[ $remainingcapacity * 100 / $lastfullcapacity ]
 
-  if [ $ibam ]; then
-  #if false; then  #DEBUG
-    percent=`$ibam --percentbattery|awk '/^Battery percentage/ {print $3}'`
-    charge=`$ibam|awk '/^Charge time left/ {print $4}'`
-    battery=`$ibam|awk '/^Battery time left/ {print $4}'`
-  else
-    chargingstate=`$state|awk '/^charging state:/ {print $3}'`
-    remainingcapacity=`$state|awk '/^remaining capacity:/ {print $3}'`
-    designcapacity=`$info|awk '/^design capacity:/ {print $3}'`
-    lastfullcapacity=`$info|awk '/^last full capacity:/ {print $4}'`
-
-    #percent=$[ $remainingcapacity * 100 / $designcapacity ]
-    percent=$[ $remainingcapacity * 100 / $lastfullcapacity ]
-
-    if [ $chargingstate == "discharging" ]; then
-      seconds=$[ $remainingcapacity*60*60 / $presentrate ]
-      hours=$[ $seconds/60/60 ]
-      minutes=$[ $seconds/60%60 ]
-      seconds=$[ $seconds%60 ]
-      battery=`printf %i:%.2i:%.2i $hours $minutes $seconds`
-    elif [ $chargingstate == "charging" ]; then
-      seconds=$[ ($lastfullcapacity-$remainingcapacity)*60*60 / $presentrate ]
-      hours=$[ $seconds/60/60 ]
-      minutes=$[ $seconds/60%60 ]
-      seconds=$[ $seconds%60 ]
-      charge=`printf %i:%.2i:%.2i $hours $minutes $seconds`
-    fi
+  if [ $chargingstate == "Discharging" ]; then
+    seconds=$[ $remainingcapacity*60*60 / $current ]
+    hours=$[ $seconds/60/60 ]
+    minutes=$[ $seconds/60%60 ]
+    seconds=$[ $seconds%60 ]
+    battery=`printf %i:%.2i:%.2i $hours $minutes $seconds`
+  elif [ $chargingstate == "Charging" ]; then
+    seconds=$[ ($lastfullcapacity-$remainingcapacity)*60*60 / $current ]
+    hours=$[ $seconds/60/60 ]
+    minutes=$[ $seconds/60%60 ]
+    seconds=$[ $seconds%60 ]
+    charge=`printf %i:%.2i:%.2i $hours $minutes $seconds`
   fi
   
   if [ $charge ]; then
@@ -86,7 +74,7 @@ battery() {
   fi
 
   if [ $charge$battery ]; then
-    echo -n "$colours $percent% (${charge}${battery} @ ${presentrate}mA) $anim"
+    echo -n "$colours $percent% (${charge}${battery} @ ${presentrate}W) $anim"
   else
     echo -n "$colours $percent% $anim"
   fi
