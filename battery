@@ -86,7 +86,7 @@ battery() {
   fi
 
   if [ $charge$battery ]; then
-    echo -n "$colours $percent% (${charge}${battery} @ ${presentrate}mW) $anim"
+    echo -n "$colours $percent% (${charge}${battery} @ ${presentrate}mA) $anim"
   else
     echo -n "$colours $percent% $anim"
   fi
