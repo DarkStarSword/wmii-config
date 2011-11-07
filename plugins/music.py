@@ -34,20 +34,21 @@ def unregister_music_backend(name):
 		del registeredMusicBackends[name]
 
 def music_player_running():
-	for module in registeredMusicBackends.values():
+	for (name, module) in registeredMusicBackends.items():
 		if module.is_running():
-			return module
+			return (name, module)
 	return None
 
 @async
 @notify_exception
 def command(command):
-	player = music_player_running()
+	(name, player) = music_player_running()
 	if player is None:
 		notify('No supported music player running')
 		music_status.active = False
 		return
 
+	notify('%s: %s' % (name, command), key='music')
 	player.commands[command]()
 
 	init_status(player)
@@ -75,7 +76,7 @@ music_status.status_failures = 0
 
 def init_status(player = None):
 	if player is None:
-		player = music_player_running()
+		(name, player) = music_player_running()
 		if player is None:
 			return
 	if isinstance(player, str): # launch passes the player name, which may not have finished init yet
