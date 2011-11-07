@@ -60,7 +60,7 @@ def vol(adjust):
 		v = v + small_adjust
 		if v > 100 or v < 0:
 			break
-	notify("%s: %d%%" % (m.mixer(), nv))
+	notify("%s: %d%%" % (m.mixer(), nv), key='mixer')
 
 def vol_up(): return vol(mixer_delta)
 def vol_down(): return vol(-mixer_delta)
@@ -73,7 +73,7 @@ def vol_mute():
 	v = m.getmute()[0]
 	v = 0 if v else 1
 	m.setmute(v)
-	notify("%s: %s" % (m.mixer(), 'off' if m.getmute()[0] else 'on'))
+	notify("%s: %s" % (m.mixer(), 'off' if m.getmute()[0] else 'on'), key='mixer')
 
 @notify_exception
 def music(command):
