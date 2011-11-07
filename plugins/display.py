@@ -1,111 +1,31 @@
 #!/usr/bin/env python
 # vi:expandtab:ts=2:sw=2
 
+# TODO: A lot of this still needs to be updated or pythonised.
+# - Is there a more pythonic way than calling xrandr and parsing output? A library?
+# - If number of xinerama screens decreases, prompt to collect missing windows
+
 import subprocess
 import re
 
-WMII_NORMCOLOURS_TEXT        = '#888888'
-WMII_NORMCOLOURS_BACKGROUND  = '#222222'
-WMII_NORMCOLOURS_BORDER      = '#333333'
-WMII_NORMCOLOURS = WMII_NORMCOLOURS_TEXT \
-          + ' ' + WMII_NORMCOLOURS_BACKGROUND \
-          + ' ' + WMII_NORMCOLOURS_BORDER
-WMII_FOCUSCOLOURS_TEXT       = '#ffffff'
-WMII_FOCUSCOLOURS_BACKGROUND = '#285577'
-WMII_FOCUSCOLOURS_BORDER     = '#4c7899'
-WMII_FOCUSCOLOURS = WMII_FOCUSCOLOURS_TEXT \
-           + ' ' + WMII_FOCUSCOLOURS_BACKGROUND \
-           + ' ' + WMII_FOCUSCOLOURS_BORDER
-WMII_ERRCOLOURS_TEXT        = '#ffcc88'
-WMII_ERRCOLOURS_BACKGROUND  = '#443322'
-WMII_ERRCOLOURS_BORDER      = '#333333'
-WMII_ERRCOLOURS = WMII_ERRCOLOURS_TEXT \
-          + ' ' + WMII_ERRCOLOURS_BACKGROUND \
-          + ' ' + WMII_ERRCOLOURS_BORDER
-
-WMII_BACKGROUND='#333333'
-WMII_FONT='fixed'
+from pluginmanager import notify, notify_exception, Menu
 
 # Internal display should start with this string from xrandr:
 INTERNAL_DISPLAY='LVDS'
 
-def WMII_MENU(items, prompt=None):
-  """
-  Port of the standard wmii menu using dmenu
-  """
-  command = ['dmenu', '-b', '-fn', WMII_FONT, '-nf', WMII_NORMCOLOURS_TEXT,
-      '-nb', WMII_NORMCOLOURS_BACKGROUND, '-sf', WMII_FOCUSCOLOURS_TEXT, '-sb',
-      WMII_FOCUSCOLOURS_BACKGROUND]
-  if prompt is not None:
-    command += ['-p', prompt]
-  p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-  for item in [(x + '\n').encode() for x in items]:
-    p.stdin.write(item)
-  p.stdin.close()
-  result = p.stdout.read().decode()
-  p.wait()
-  return result
+def disableAutoLock():
+  try:
+    import lock
+    lock.disableAutoLock()
+  except ImportError:
+    pass
 
-def wmiiCommand(file, command=None, action='create'):
-  p = subprocess.Popen(['wmiir', action, file], stdin=subprocess.PIPE)
-  if command is not None:
-    p.stdin.write(command.encode())
-    p.stdin.close()
-  p.wait()
-
-class __clsStatus(object):
-  __runningTimers={}
-
-  def display(cls, message, barfile=None, timeout=None,
-      colour=WMII_NORMCOLOURS):
-    """
-    Display a message for timeout seconds in the wmii bar section barfile.
-
-      message: The message to display
-      barfile: Identify the file in which to place the message as passed to
-               wmiir
-      timeout: Specify time to automatically remove message, or None to
-               indicate the message does not expire
-       colour: Specify a colour string for the message, default WMII
-               colours will be used if none specified
-    """
-    if barfile is None:
-      import time
-      import random
-      barfile = '/lbar/aaa-' + str(time.time()) + str(random.random())
-    if barfile in cls.__runningTimers:
-      cls.__runningTimers[barfile].cancel()
-
-    wmiiCommand(barfile, colour + ' ' + message)
-
-    if timeout is not None:
-      import threading
-      t = threading.Timer(timeout, cls.remove, [barfile])
-      t.start()
-      cls.__runningTimers[barfile] = t
-
-  def remove(cls, barfile):
-    wmiiCommand(barfile, action='remove')
-
-  def __timerExpire(cls, barfile):
-    cls.remove(barfile)
-    del cls.__runningTimers[barfile]
-
-status = __clsStatus()
-
-def __disableXAutoLock():
-  subprocess.call(['xautolock', '-disable'])
-
-def disableXAutoLock():
-  subprocess.call(['xautolock', '-disable'])
-
-  # FIXME: Race condition with restarting wmii
-  import threading
-  t = threading.Timer(5, __disableXAutoLock)
-  t.start()
-
-def enableXAutoLock():
-  subprocess.call(['xautolock', '-enable'])
+def enableAutoLock():
+  try:
+    import lock
+    lock.enableAutoLock()
+  except ImportError:
+    pass
 
 def disableScreenBlanking():
   subprocess.call(['xset', 's', 'off'])
@@ -190,10 +110,10 @@ def setResolution(devices, resolution, internalDisplay, disabledDevices = None,
       xrandr = subprocess.Popen(['xrandr', '--addmode', device, resolution],
           stderr=subprocess.PIPE)
       err = xrandr.stderr.read()
+      # FIXME: On nvidia we get a non-fatal error, we should not return failure or we will mess up xautolock disabling, etc
       wait(xrandr)
       if (err != ''):
-        status.display(err.replace('\n','') + ' (' + device + ')', timeout=5,
-            colour=WMII_ERRCOLOURS)
+        notify(err.replace('\n','') + ' (' + device + ')', colours='errcolors')
         return 1
   if disabledDevices is not None:
     for device in disabledDevices:
@@ -202,17 +122,8 @@ def setResolution(devices, resolution, internalDisplay, disabledDevices = None,
   err = xrandr.stderr.read()
   ret = xrandr.wait()
   if (err != ''):
-    status.display(err.replace('\n','') + ' (' + device + ')', timeout=5,
-        colour=WMII_ERRCOLOURS)
+    notify(err.replace('\n','') + ' (' + device + ')', colours='errcolors')
   return ret
-
-def restartWmii():
-  pass # No longer required in wmii 3.9
-#  """
-#  Tell wmii to exec itself - to work around the fact that it doesn't listen
-#  to resolution changes
-#  """
-#  wmiiCommand('/ctl', 'exec wmii', 'write')
 
 def lidOpen():
   """
@@ -239,8 +150,8 @@ def permutations(list, seperator):
   perms += permutations(list[1:], seperator)
   return [list[0] + seperator + x for x in perms] + perms + [list[0]]
 
-def changeDisplays(restart=True, interactive=True, targetDisplays=None,
-    resolution=None, layout=None):
+def _changeDisplays(interactive=True, targetDisplays=None, resolution=None,
+    layout=None):
   """
   Select active displays. Prompt the user for which display[s] to switch
   to, then prompt for the resolution and switch to the selected displays.
@@ -255,19 +166,22 @@ def changeDisplays(restart=True, interactive=True, targetDisplays=None,
   beamer presentations with the speaker notes on the right. This support is
   incomplete and will NOT handle edge cases.
   """
-  status.display('Stand by...', barfile='/lbar/display')
+  notice = notify('Stand by...', key='display')
   (displays, activeDisplays, disabledDisplays, internalDisplay) = enumerateDisplays()
   interactive = interactive and activeDisplays and not \
       (onlyInternalActive(activeDisplays) and lidOpen() == False)
-  status.remove('/lbar/display')
+  notice.remove()
 
   if interactive or targetDisplays:
     if targetDisplays is None:
-      targetDisplays = WMII_MENU(['Auto'] + permutations(list(displays), '+') \
-          + ['Show Disconnected'], 'Displays:').split('+')
-      if (targetDisplays == ['Show Disconnected']):
-        targetDisplays = WMII_MENU(permutations(list(displays) \
-            + list(disabledDisplays), '+'), 'Displays:').split('+')
+      if len(displays) + len(disabledDisplays) == 1:
+        targetDisplays = [displays.keys()[0]]
+      else:
+        targetDisplays = Menu(['Auto'] + permutations(list(displays), '+') \
+            + ['Show Disconnected'], prompt='Displays:')().split('+')
+        if (targetDisplays == ['Show Disconnected']):
+          targetDisplays = Menu(permutations(list(displays) \
+              + list(disabledDisplays), '+'), prompt='Displays:')().split('+')
     if (targetDisplays == ['']): return
     elif (targetDisplays == ['Auto']):
       interactive = False
@@ -277,8 +191,7 @@ def changeDisplays(restart=True, interactive=True, targetDisplays=None,
       displays = {}
       for display in targetDisplays:
         if display not in disabledDisplays:
-          status.display(("Display %s unknown!" % display), timeout=5,
-              colour=WMII_ERRCOLOURS)
+          notify("Display %s unknown!" % display, key='display', colours='errcolors')
           return
         displays[display] = disabledDisplays[display]
         del disabledDisplays[display]
@@ -289,31 +202,41 @@ def changeDisplays(restart=True, interactive=True, targetDisplays=None,
   if resolution is None:
     resolutions = intersectResolutions(displays)
     if interactive:
-      resolution = WMII_MENU(resolutions, 'Resolution:')
+      resolution = Menu(resolutions, prompt='Resolution:')()
       if (resolution == ''): return
       if not re.match('^\d+x\d+$', resolution):
-        status.display(resolution + " is not a valid resolution", timeout=5,
-            colour=WMII_ERRCOLOURS)
+        notify(resolution + " is not a valid resolution", colours='errcolors')
         return
     else:
       resolution = largestResolution(resolutions)
 
-  status.display('Stand by...', barfile='/lbar/display')
+  notice = notify('Stand by...', key='display')
   ret = setResolution(displays, resolution, internalDisplay, disabledDisplays,
       layout)
-  status.remove('/lbar/display')
-  if ret == 0 and restart:
-    restartWmii() # wmii does not pick up resolution changes
+  notice.remove()
   if ret == 0:
     return resolution, activeDisplays
 
+@notify_exception
+def changeDisplays(interactive=True, targetDisplays=None, resolution=None,
+    layout=None):
+  ret = _changeDisplays(interactive, targetDisplays, resolution, layout)
+  try:
+    import background
+    background.set_background()
+  except:
+    pass
+  return ret
+
+@notify_exception
 def restoreDisplays(restoreDisplays):
   changeDisplays(interactive=False,
       targetDisplays=list(zip(*restoreDisplays)[0]),
       resolution=restoreDisplays[0][1])
 
+@notify_exception
 def magicChangeAndPresent(pdf):
-  layout=WMII_MENU(['Ordinary PDF', 'Speaker Notes on Right', 'Speaker Notes on Left'], 'PDF Layout:')
+  layout=Menu(['Ordinary PDF', 'Speaker Notes on Right', 'Speaker Notes on Left'], prompt='PDF Layout:')()
   if layout == '': return
   layout = {
       'Ordinary PDF':           None,
@@ -322,7 +245,7 @@ def magicChangeAndPresent(pdf):
       }.get(layout)
   ret = changeDisplays(layout=layout)
   if ret is not None:
-    disableXAutoLock()
+    disableAutoLock()
     disableScreenBlanking()
 
     (resolution, oldSetup) = ret
@@ -334,18 +257,19 @@ def magicChangeAndPresent(pdf):
     subprocess.call(command)
 
     enableScreenBlanking()
-    enableXAutoLock()
+    enableAutoLock()
     restoreDisplays(oldSetup)
 
+@notify_exception
 def selectAndPresent():
   import os
   dirname = os.path.expanduser('~')
   files = [f for f in os.listdir(dirname)
       if f.lower().endswith('.pdf')
       and os.path.isfile(os.path.join(dirname, f))]
-  f = WMII_MENU(files)
+  f = Menu(files)()
   if not os.path.isfile(os.path.join(dirname, f)):
-    status.display(f+" is not a file")
+    notice(f+" is not a file", colours='errcolors')
     return
   magicChangeAndPresent(f)
 
@@ -355,3 +279,5 @@ if __name__ == '__main__':
     magicChangeAndPresent(sys.argv[1])
   else:
     changeDisplays()
+
+# TODO: Use --primary to select display with wmii bar
