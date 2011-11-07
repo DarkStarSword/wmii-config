@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import functools
+
 try: from notify import notify
 except Exception, e: # Fall back to something sensible
 	def notify(msg, *a, **kw):
@@ -32,7 +34,6 @@ def notify_exception(arg):
 	"""
 	comment = None
 	def wrap1(f):
-		import functools
 		@functools.wraps(f)
 		def wrap2(*args):
 			try: return f(*args)
@@ -49,6 +50,14 @@ def notify_exception(arg):
 	# No comment was passed in, so we need one less level of indirection
 	# (arg is what we are decorating)
 	return wrap1(arg)
+
+def async(func):
+	@functools.wraps(func)
+	def wrap(*args, **kwargs):
+		import threading
+		return threading.Thread(target=func, args=args, kwargs=kwargs).start()
+	return wrap
+
 
 def imported_from_wmiirc():
 	import sys, os

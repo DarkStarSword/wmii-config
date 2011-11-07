@@ -3,7 +3,7 @@
 from pygmi import defmonitor, wmii
 
 import pluginmanager
-from pluginmanager import notify, notify_exception
+from pluginmanager import notify, notify_exception, async
 
 autoloadMusicBackends = ['moc', 'cmus']
 registeredMusicBackends = {}
@@ -39,6 +39,7 @@ def music_player_running():
 			return module
 	return None
 
+@async
 @notify_exception
 def command(command):
 	player = music_player_running()
