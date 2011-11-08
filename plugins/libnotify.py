@@ -13,14 +13,6 @@ class libnotify(dbus.service.Object):
 
 	@dbus.service.method(dbus_interface='org.freedesktop.Notifications',
 			     in_signature='susssasa{sv}i', out_signature='u')
-#       <arg name="app_name" type="s" direction="in"/>
-#       <arg name="id" type="u" direction="in"/>
-#       <arg name="icon" type="s" direction="in"/>
-#       <arg name="summary" type="s" direction="in"/>
-#       <arg name="body" type="s" direction="in"/>
-#       <arg name="actions" type="as" direction="in"/>
-#       <arg name="hints" type="a{sv}" direction="in"/>
-#       <arg name="timeout" type="i" direction="in"/>
 	# @notify_exception #dbus.service.method inspects the passed function, which doesn't work with this
 	def Notify(self, app_name, id, icon, summary, body, actions, hints, timeout):
 		print 'Notify: [%d] app_name: %s, icon: %s, actions: %s, hints: %s' % (id, app_name, icon, repr(actions), repr(hints))
@@ -51,7 +43,6 @@ class libnotify(dbus.service.Object):
 
 	@dbus.service.method(dbus_interface='org.freedesktop.Notifications',
 			     in_signature='u')
-#       <arg name="id" type="u" direction="in"/>
 	# @notify_exception #dbus.service.method inspects the passed function, which doesn't work with this
 	def CloseNotification(self, id):
 		notify('libnotify.py: Unimplemented CloseNotification called')
@@ -120,12 +111,6 @@ else:
 
 
 # Should look like:
-#u'<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"\n"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">\n<node>\n  <interface name="org.freedesktop.DBus.Introspectable">\n    <method name="Introspect">\n      <arg name="data" direction="out" type="s"/>\n    </method>\n  </interface>\n  <interface name="org.freedesktop.DBus.Properties">\n    <method name="Get">\n      <arg name="interface" direction="in" type="s"/>\n      <arg name="propname" direction="in" type="s"/>\n      <arg name="value" direction="out" type="v"/>\n    </method>\n    <method name="Set">\n      <arg name="interface" direction="in" type="s"/>\n      <arg name="propname" direction="in" type="s"/>\n      <arg name="value" direction="in" type="v"/>\n    </method>\n    <method name="GetAll">\n      <arg name="interface" direction="in" type="s"/>\n      <arg name="props" direction="out" type="a{sv}"/>\n    </method>\n  </interface>\n  <interface name="org.freedesktop.Notifications">\n    <method name="GetServerInformation">\n      <arg name="return_name" type="s" direction="out"/>\n      <arg name="return_vendor" type="s" direction="out"/>\n      <arg name="return_version" type="s" direction="out"/>\n      <arg name="return_spec_version" type="s" direction="out"/>\n    </method>\n    <method name="GetCapabilities">\n      <arg name="return_caps" type="as" direction="out"/>\n    </method>\n    <method name="CloseNotification">\n      <arg name="id" type="u" direction="in"/>\n    </method>\n    <method name="Notify">\n      <arg name="app_name" type="s" direction="in"/>\n      <arg name="id" type="u" direction="in"/>\n      <arg name="icon" type="s" direction="in"/>\n      <arg name="summary" type="s" direction="in"/>\n      <arg name="body" type="s" direction="in"/>\n      <arg name="actions" type="as" direction="in"/>\n      <arg name="hints" type="a{sv}" direction="in"/>\n      <arg name="timeout" type="i" direction="in"/>\n      <arg name="return_id" type="u" direction="out"/>\n    </method>\n  </interface>\n</node>\n'
-
-# Mine:
-#u'<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"\n"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">\n<node name="/org/freedesktop/Notifications">\n  <interface name="org.freedesktop.Notifications">\n    <method name="CloseNotification">\n      <arg direction="in"  type="u" name="id" />\n    </method>\n    <method name="GetCapabilities">\n      <arg direction="out" type="as" />\n    </method>\n    <method name="GetServerInformation">\n      <arg direction="out" type="s" />\n      <arg direction="out" type="s" />\n      <arg direction="out" type="s" />\n      <arg direction="out" type="s" />\n    </method>\n    <method name="Notify">\n      <arg direction="in"  type="s" name="app_name" />\n      <arg direction="in"  type="u" name="id" />\n      <arg direction="in"  type="s" name="icon" />\n      <arg direction="in"  type="s" name="summary" />\n      <arg direction="in"  type="s" name="body" />\n      <arg direction="in"  type="as" name="actions" />\n      <arg direction="in"  type="a{sv}" name="hints" />\n      <arg direction="in"  type="i" name="timeout" />\n      <arg direction="out" type="u" />\n    </method>\n  </interface>\n  <interface name="org.freedesktop.DBus.Introspectable">\n    <method name="Introspect">\n      <arg direction="out" type="s" />\n    </method>\n  </interface>\n</node>\n'
-
-
 # u'<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 # "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 # <node>
