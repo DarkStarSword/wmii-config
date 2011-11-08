@@ -19,9 +19,10 @@ class terminal(tuple):
 			raise TypeError(type(command))
 
 		colours = '-bg Black -fg White'.split() if bw else ''
+		orig_command = ' '.join(orig_command)
 
-		tmp = super(self, terminal).__new__(self, list(wmiirc.terminal) + list(colours) + ['-e'] + list(command))
-		tmp.command = ' '.join(orig_command)
+		tmp = super(self, terminal).__new__(self, list(wmiirc.terminal) + list(colours) + ['-title', orig_command, '-e'] + list(command))
+		tmp.command = orig_command
 		return tmp
 
 	def __str__(self):
