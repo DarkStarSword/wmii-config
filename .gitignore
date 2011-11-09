@@ -3,3 +3,4 @@ history.actions
 history.progs
 history.tags
 wmiirc_local
+plugins/local.py

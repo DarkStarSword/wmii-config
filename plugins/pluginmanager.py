@@ -2,7 +2,10 @@
 
 import functools
 
-try: from notify import notify
+try:
+	if not imported_from_wmiirc():
+		raise Exception()
+	from notify import notify
 except Exception, e: # Fall back to something sensible
 	def notify(msg, *a, **kw):
 		from pygmi import client

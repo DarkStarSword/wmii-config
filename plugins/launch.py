@@ -29,14 +29,21 @@ class terminal(tuple):
 		return self.command
 
 @notify_exception
-def launch(args, background=True):
-	notify('Launching %s...' % args.__str__())
+def _launch(args, background=True):
 	if type(args) == str:
 		args = ('wmiir', 'setsid', args)
 	call(*args, background=background)
 	# FIXME: Report missing apps - NOTE: xterm would always launch (and
 	# pygmi.call doesn't report failure), so I should actually check for
 	# existance
+
+@notify_exception
+def launch(args, background=True):
+	if type(args) == list:
+		notify('Launching %s...' % ' '.join(args))
+	else:
+		notify('Launching %s...' % args.__str__())
+	return _launch(args, background)
 
 @notify_exception
 def launch_music_player(args, background = True):
