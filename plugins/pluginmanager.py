@@ -2,6 +2,10 @@
 
 import functools
 
+def imported_from_wmiirc():
+	import sys, os
+	return os.path.splitext(os.path.split(sys.modules['__main__'].__file__)[1])[0] == 'wmiirc'
+
 try:
 	if not imported_from_wmiirc():
 		raise Exception()
@@ -61,10 +65,6 @@ def async(func):
 		return threading.Thread(target=func, args=args, kwargs=kwargs).start()
 	return wrap
 
-
-def imported_from_wmiirc():
-	import sys, os
-	return os.path.splitext(os.path.split(sys.modules['__main__'].__file__)[1])[0] == 'wmiirc'
 
 def include_wmiirc_path():
 	"""

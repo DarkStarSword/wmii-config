@@ -37,7 +37,7 @@ def music_player_running():
 	for (name, module) in registeredMusicBackends.items():
 		if module.is_running():
 			return (name, module)
-	return None
+	return (None, None)
 
 @async
 @notify_exception
