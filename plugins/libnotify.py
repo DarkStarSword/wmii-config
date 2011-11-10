@@ -74,7 +74,7 @@ def load():
 	import threading
 	global _thread
 	print 'load 1'
-	_thread = threading.Thread(target=main)
+	_thread = threading.Thread(target=main, name='libnotify')
 	print 'load 2'
 	_thread.daemon = True
 	print 'load 3'

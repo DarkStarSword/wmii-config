@@ -35,6 +35,6 @@ def set_background(file = None):
 		return
 
 	import threading
-	t = threading.Thread(target=_set_background)
+	t = threading.Thread(target=_set_background, name='Set-X-Background')
 	t.daemon = True
 	t.start()

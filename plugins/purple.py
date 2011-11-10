@@ -109,7 +109,7 @@ def main():
 def load():
 	import threading
 	global _thread
-	_thread = threading.Thread(target=main)
+	_thread = threading.Thread(target=main, name='Purple-Dbus-Listener')
 	_thread.daemon = True
 	_thread.start()
 

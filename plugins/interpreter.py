@@ -58,7 +58,7 @@ def proxy():
 	i = open(output_file, 'r', 0)
 	o = open(input_file, 'r+', 0) # Want this to fail if the file does not exist
 	try:
-		t = threading.Thread(target = proxy_process_output, args=[i])
+		t = threading.Thread(target = proxy_process_output, args=[i], name='Debug-Interpreter-Client-Output')
 		t.daemon = True
 		t.start()
 		while t.isAlive():

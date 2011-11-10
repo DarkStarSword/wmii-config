@@ -49,7 +49,7 @@ def spawnAutoLock():
 			[selfFile(), '-notify', str(margin), '-notifier', selfFile() + ' -n'])
 	# Prevent xautolock becoming a zombie if something kills it:
 	# I could also use this to set up any cleanup I might want
-	threading.Thread(target = lambda: xautolock.wait()).start()
+	threading.Thread(target = lambda: xautolock.wait(), name='XAutoLock-Waiter').start()
 
 def keepScreenOff(process):
 	"""
@@ -89,7 +89,7 @@ def _locknow():
 	xtrlock = subprocess.Popen('xtrlock')
 	#xtrlock = subprocess.Popen('strace xtrlock'.split()) # 'tis difficult to debug
 
-	t = threading.Thread(target = keepScreenOff, args=[xtrlock])
+	t = threading.Thread(target = keepScreenOff, args=[xtrlock], name='Keep-Screen-Off')
 	t.daemon = True # Don't prevent termination
 	t.start()
 
@@ -99,7 +99,7 @@ def _locknow():
 
 def locknow():
 	import threading
-	t = threading.Thread(target = _locknow)
+	t = threading.Thread(target = _locknow, name='Lock-Now')
 	t.daemon = True
 	t.start()
 
