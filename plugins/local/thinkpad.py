@@ -12,7 +12,7 @@ keys.bind('main', (
 @notify_exception
 def fixX11():
 	notify("Applying X11 settings")
-	_launch("xinput set-float-prop 'Primax Lenovo Laser Mouse' 'Device Accel Constant Deceleration' 2".split())
+	_launch(['xinput', 'set-float-prop', 'Primax Lenovo Laser Mouse', 'Device Accel Constant Deceleration', '2'])
 	_launch("setxkbmap -option terminate:ctrl_alt_bksp".split())
 	_launch("setxkbmap -option keypad:pointerkeys".split())
 
