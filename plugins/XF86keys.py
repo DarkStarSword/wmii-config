@@ -27,6 +27,7 @@ for mode in keys.modelist:
 		('XF86HomePage',	lambda k: try_launch('webBrowser')),
 		('XF86Mail',		lambda k: try_launch('emailClient')),
 		('XF86Eject',		lambda k: try_launch('eject')),
+		('XF86TouchpadToggle',	lambda k: toggle_trackpad()),
 		),
 		)
 
@@ -36,6 +37,11 @@ keys.cleanup()
 #except:
 	#pass
 keys.mode = keys.mode # Refresh current key bindings - only required when [re]loading plugin after event loop starts
+
+@notify_exception
+def toggle_trackpad():
+	import trackpad
+	trackpad.toggle_trackpad()
 
 def locknow():
 	import lock
