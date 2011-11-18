@@ -82,6 +82,8 @@ keys.bind('main', (
 		lambda k: launch(apps.calculator)),
 
 
+	('%(mod)s-F3', "Blank Screen Now",
+		lambda k: display.blank_screen()),
 	('%(mod)s-F4', "Toggle Screen Blanking",
 		lambda k: display.toggle_screen_blanking()),
 	('%(mod)s-F5', "Change Displays",

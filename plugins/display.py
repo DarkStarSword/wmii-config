@@ -27,6 +27,24 @@ def enableAutoLock():
   except ImportError:
     pass
 
+def blank_screen():
+  import threading
+
+  def _blank_screen():
+    subprocess.call('xset dpms force suspend'.split())
+
+  # Not necessary to blank screen, but DPMS will be ENABLED after we do this,
+  # so this will help make things consistent:
+  enable_screen_blanking()
+
+  _blank_screen()
+  # Slight delay to give the key a chance to release then blank screen:
+  threading.Timer(0.1, _blank_screen)
+  # Delayed blank in case key release un-blanked screen later than expected:
+  threading.Timer(0.5, _blank_screen)
+  # If the user had their hand on the key longer than that they can retry
+  # themselves, otherwise this risks becoming truly annoying
+
 screen_blanking_enabled = True
 def disable_screen_blanking():
   global screen_blanking_enabled
