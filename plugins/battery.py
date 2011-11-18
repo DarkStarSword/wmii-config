@@ -37,7 +37,7 @@ anim = {
 colours = {
 	'full': ('#88bb88', '#223322', '#333333'),
 	'charging': wmii['normcolors'],
-	'discharging': wmii['focuscolors'],
+	'discharging': wmii['normcolors'],
 	'warning': ('#ffcc88', '#222222', '#333333'),
 	'critical': [('#888888', '#442222', '#333333'), ('#ffcc88', '#443322', '#333333')],
 	# 'unknown' defined in code above
