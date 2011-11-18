@@ -27,13 +27,24 @@ def enableAutoLock():
   except ImportError:
     pass
 
-def disableScreenBlanking():
+screen_blanking_enabled = True
+def disable_screen_blanking():
+  global screen_blanking_enabled
   subprocess.call(['xset', 's', 'off'])
   subprocess.call(['xset', '-dpms'])
+  screen_blanking_enabled = False
+  notify('Screen Blanking DISABLED', key='display-blanking')
 
-def enableScreenBlanking():
+def enable_screen_blanking():
+  global screen_blanking_enabled
   subprocess.call(['xset', 's', 'on'])
   subprocess.call(['xset', '+dpms'])
+  screen_blanking_enabled = True
+  notify('Screen Blanking Enabled', key='display-blanking')
+
+@notify_exception
+def toggle_screen_blanking():
+  disable_screen_blanking() if screen_blanking_enabled else enable_screen_blanking()
 
 def isInternalDisplay(display):
   return display.startswith(INTERNAL_DISPLAY)
@@ -246,7 +257,7 @@ def magicChangeAndPresent(pdf):
   ret = changeDisplays(layout=layout)
   if ret is not None:
     disableAutoLock()
-    disableScreenBlanking()
+    disable_screen_blanking()
 
     (resolution, oldSetup) = ret
     [width, height] = [int(x) for x in resolution.split('x')]
@@ -256,7 +267,7 @@ def magicChangeAndPresent(pdf):
     command += [pdf]
     subprocess.call(command)
 
-    enableScreenBlanking()
+    enable_screen_blanking()
     enableAutoLock()
     restoreDisplays(oldSetup)
 
