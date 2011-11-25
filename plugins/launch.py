@@ -3,7 +3,7 @@
 import wmiirc
 from pygmi import call
 
-from pluginmanager import notify, notify_exception
+from pluginmanager import notify, notify_exception, async
 
 class terminal(tuple):
 	def __new__(self, command, bw=False, sleep=False):
@@ -28,6 +28,7 @@ class terminal(tuple):
 	def __str__(self):
 		return self.command
 
+@async
 @notify_exception
 def _launch(args, background=True):
 	if type(args) == str:
