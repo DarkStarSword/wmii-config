@@ -39,9 +39,9 @@ def blank_screen():
 
   _blank_screen()
   # Slight delay to give the key a chance to release then blank screen:
-  threading.Timer(0.1, _blank_screen)
+  threading.Timer(0.1, _blank_screen).start()
   # Delayed blank in case key release un-blanked screen later than expected:
-  threading.Timer(0.5, _blank_screen)
+  threading.Timer(0.5, _blank_screen).start()
   # If the user had their hand on the key longer than that they can retry
   # themselves, otherwise this risks becoming truly annoying
 
