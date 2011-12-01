@@ -35,6 +35,9 @@ def col_spec(area_spec):
 	# something that should have been in col 2 into col 3.
 	return area_spec.split(':')[-1]
 
+def screen_col_spec(area_spec):
+	return '%s:%s' % (screen_spec(area_spec), col_spec(area_spec))
+
 def area_aso(area_spec):
 	return (area_spec, screen_spec(area_spec), col_spec(area_spec))
 
@@ -46,8 +49,19 @@ def send_all_tags(args=''):
 	(area, screen, col) = area_aso(client_area(Tag('sel'), client))
 
 	all_tags = map(str, range(10))
-	client.tags = '+'.join(all_tags)
 
+	selected = {}
+	for tag in [ Tag(t) for t in all_tags ]:
+		try:
+			selected[tag.id] = list(tag.selected)
+		except:
+			selected[tag.id] = '0:1' # Tag does not exist, make sure default screen is selected
+		else:
+			selected[tag.id][0] = screen_col_spec(selected[tag.id][0]) # Add '0:' if not already present
+			if len(selected[tag.id]) == 1:
+				selected[tag.id] = selected[tag.id][0]
+
+	client.tags = '+'.join(all_tags)
 	time.sleep(0.1) # Race: give wmii some time to create tags
 
 	for tag in [ Tag(t) for t in all_tags ]:
@@ -67,6 +81,8 @@ def send_all_tags(args=''):
 			# it was the only client in the rightmost column
 			if new_screen != screen:
 				tag.send(client, '%s:1' % screen)
+		tag.selcol.mode = 'default' # I think it is reasonable for most cases
+		tag.select(selected[tag.id])
 
 def registerActions():
 	import wmiirc
