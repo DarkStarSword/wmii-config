@@ -152,6 +152,8 @@ def load_plugin(args = ''):
 
 @notify_exception('while reloading wmiirc_local')
 def reload_wmiirc_local(args = ''):
+	if args.strip() != '':
+		notify('WARNING: reload_wmiirc_local unexpected argument: %s, IGNORING' % args)
 	notify(__load_plugin('wmiirc_local'))
 
 if __name__ == '__main__':
