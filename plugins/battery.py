@@ -82,19 +82,22 @@ def battery(self):
 	#percent = remainingcapacity * 100 / designcapacity
 	percent = remainingcapacity * 100 / lastfullcapacity
 
+	seconds = 0
 	if chargingstate == "Discharging":
-		seconds = remainingcapacity * 60 * 60 / current
+		if current:
+			seconds = remainingcapacity * 60 * 60 / current
 		if percent <= 5:	state = 'critical'
 		elif percent <= 15:	state = 'warning'
 		else:			state = 'discharging'
 	elif chargingstate == "Charging":
-		seconds = (lastfullcapacity - remainingcapacity) * 60 * 60 / current
+		if current:
+			seconds = (lastfullcapacity - remainingcapacity) * 60 * 60 / current
 		if percent == 100:	state = 'full' # or as good as
 		else:			state = 'charging'
 	elif chargingstate == "Full":
-		seconds = 0;		state = 'full'
+		state = 'full'
 	else:
-		seconds = 0;		state = 'unknown'
+		state = 'unknown'
 		set_unknown_anim_colours(chargingstate, percent)
 
 	state_anim = anim[state]
