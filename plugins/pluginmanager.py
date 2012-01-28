@@ -1,10 +1,56 @@
 #!/usr/bin/env python
 
+"""
+plugin manager
+Plugin to manage other plugins, including providing actions to load & reload
+plugins, reload wmiirc_local, etc.
+
+Also provides services to plugins, including notice & menus.
+
+Services may be provided by additional plugins if available, or will fall-back
+to a simple implementation, so the existence of such services can be relied
+upon (provided it is accessed via this plugin).
+
+
+All plugins are allowed (and expected) to depend on this plugin, but should not
+expect other plugins to exist (and should fail gracefully if a plugin they
+require does not exist).
+"""
+
 import functools
+
+# PLEASE NOTE: The order of functions is important here to get the dependencies
+# right & to make sure that any fall backs happen before they are required.
+
+# PLEASE BE CAREFUL IF REFACTORING / REORDERING THIS FILE
 
 def imported_from_wmiirc():
 	import sys, os
 	return os.path.splitext(os.path.split(sys.modules['__main__'].__file__)[1])[0] == 'wmiirc'
+
+def include_wmiirc_path():
+	"""
+	This duplicates the functionality in wmiirc to allow wmiirc.py, pygmi
+	and pyxp to be imported... Note that it is *NOT* recommended to import
+	wmiirc.py (unless imported_from_wmiirc = True), as it lacks the test to
+	determine if it is being run directly or imported.
+	"""
+	if imported_from_wmiirc():
+		return
+	print 'WARNING: Calling include_wmiirc_path with intent to include wmiirc.py is not recommended'
+	import os, sys
+	path = []
+	for p in os.environ.get("WMII_CONFPATH", "").split(':'):
+	    path += [p, p + '/python']
+	sys.path = path + sys.path
+
+if not imported_from_wmiirc():
+	try:
+		import pygmi
+		del pygmi
+	except ImportError:
+		print 'NOTE: pygmi/pyxp not found in PATH - adding WMII_CONFPATH to search path. Be careful if importing wmiirc!'
+		include_wmiirc_path()
 
 try:
 	if not imported_from_wmiirc():
@@ -64,22 +110,6 @@ def async(func):
 		import threading
 		return threading.Thread(target=func, args=args, kwargs=kwargs).start()
 	return wrap
-
-
-def include_wmiirc_path():
-	"""
-	This duplicates the functionality in wmiirc to allow wmiirc.py to be
-	imported... Note that this is *NOT* recommended as wmiirc.py lacks the
-	test to determine if it is being run directly or imported.
-	"""
-	if imported_from_wmiirc():
-		return
-	print 'WARNING: Calling include_wmiirc_path with intent to include wmiirc.py is not recommended'
-	import os, sys
-	path = []
-	for p in os.environ.get("WMII_CONFPATH", "").split(':'):
-	    path += [p, p + '/python']
-	sys.path = path + sys.path
 
 def hack_run_manually():
 	"""

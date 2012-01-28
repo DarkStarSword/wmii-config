@@ -74,6 +74,7 @@ def music_status(self):
 music_status.active = False
 music_status.status_failures = 0
 
+@notify_exception
 def init_status(player = None):
 	if player is None:
 		(name, player) = music_player_running()
@@ -92,4 +93,5 @@ def init():
 		except: pass
 
 init()
-init_status()
+try: init_status()
+except: pass
