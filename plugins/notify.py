@@ -1,12 +1,19 @@
 #!/bin/echo Don't call me directly
 
-from pygmi import wmii
+# NOTE: We are imported from pluginmanager, so we are not importing pluginmanager
+
+# WARNING: If something else imports us directly, it must ensure it has already
+# imported pluginmanager to make sure that pygmi is in the path!
+
+from pygmi import wmii, Colors
 
 # American spelling is only for consistency with other wmii['...colors']:
 if 'notifycolors' not in wmii.cache:
+	wmii.ctl_types['notifycolors'] = (Colors.from_string, lambda c: str(Colors(*c)))
 	wmii['notifycolors'] = '#000000', '#f1f4cb', '#81654f'
 
 if 'errcolors' not in wmii.cache:
+	wmii.ctl_types['errcolors'] = (Colors.from_string, lambda c: str(Colors(*c)))
 	wmii['errcolors'] = '#ffcc88', '#443322', '#333333'
 
 # Based partly on wmiirc.Notice

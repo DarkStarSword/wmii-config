@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pygmi import defmonitor, wmii
-
 import pluginmanager
 from pluginmanager import notify, notify_exception, async
+
+from pygmi import defmonitor, wmii
 
 autoloadMusicBackends = ['moc', 'cmus']
 registeredMusicBackends = {}

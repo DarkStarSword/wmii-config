@@ -1,8 +1,9 @@
-from pygmi import *
-
 from pluginmanager import notify, notify_exception
+
 from launch import launch, _launch
 import os, background
+
+from pygmi import *
 
 background.set_background(os.path.expanduser('~/water-drop1.jpg'))
 

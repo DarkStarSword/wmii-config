@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from pygmi import *
 from pluginmanager import notify_exception
+
+from pygmi import *
 
 @notify_exception
 def find_lost_windows(args=''):

@@ -1,8 +1,8 @@
 #!/bin/echo Don't call me directly
 
-import pygmi
-
 from pluginmanager import notify
+
+import pygmi
 
 def inthread(name, args, action, **kwargs):
 	import inspect

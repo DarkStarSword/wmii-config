@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import pluginmanager
+
 if __name__ == '__main__':
 	import sys
 	print "Don't call me directly"

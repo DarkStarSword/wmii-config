@@ -1,9 +1,9 @@
 #!/bin/echo Don't run me directly
 
+from pluginmanager import notify, notify_exception
+
 import wmiirc
 from pygmi import call
-
-from pluginmanager import notify, notify_exception
 
 class terminal(tuple):
 	def __new__(self, command, bw=False, sleep=False):

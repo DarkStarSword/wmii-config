@@ -1,7 +1,7 @@
 #!/bin/echo Don't call me directly
 
-from pygmi import *
 from pluginmanager import notify, notify_exception
+from pygmi import *
 
 mixer_delta = 2
 
