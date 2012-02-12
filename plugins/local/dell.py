@@ -5,6 +5,9 @@ import os, background
 
 from pygmi import *
 
+import mixer
+mixer.mixers = ['Master', 'LFE']
+
 background.set_background(os.path.expanduser('~/water-drop1.jpg'))
 
 keys.bind('main', (
