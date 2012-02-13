@@ -97,10 +97,10 @@ def _locknow():
 
 	tags.select(cur)
 
-def locknow():
+def locknow(daemon = True):
 	import threading
 	t = threading.Thread(target = _locknow, name='Lock-Now')
-	t.daemon = True
+	t.daemon = daemon
 	t.start()
 
 def enableAutoLock():
@@ -174,7 +174,7 @@ def main():
 		else:
 			usage()
 	else:
-		locknow()
+		locknow(False)
 
 if __name__ == '__main__':
 	pluginmanager.hack_run_manually()

@@ -10,7 +10,7 @@ apps.webBrowser		= 'iceweasel'
 apps.quickWebBrowser	= terminal('w3m', bw=True)
 apps.emailClient	= terminal('sup-mail', bw=True)
 apps.RSSReader		= terminal('canto')
-apps.python		= terminal('ipython')
+apps.python		= terminal('ipython', bw=True)
 apps.musicPlayer	= terminal('cmus')
 apps.otherMusicPlayer	= terminal('mocp')
 apps.IMClient		= terminal('finch', bw=True)
