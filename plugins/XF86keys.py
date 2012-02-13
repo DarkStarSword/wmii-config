@@ -1,9 +1,7 @@
 #!/bin/echo Don't call me directly
 
-from pygmi import *
 from pluginmanager import notify, notify_exception
-
-mixer_delta = 2
+from pygmi import *
 
 if __name__ == '__main__':
 	import sys
@@ -15,9 +13,9 @@ for mode in keys.modelist:
 		('XF86ScreenSaver',	lambda k: locknow()),
 		('XF86Sleep',		lambda k: locknow()),
 		('XF86Suspend',		lambda k: locknow()),
-		('XF86AudioLowerVolume',lambda k: vol_down()),
-		('XF86AudioRaiseVolume',lambda k: vol_up()),
-		('XF86AudioMute',	lambda k: vol_mute()),
+		('XF86AudioLowerVolume',lambda k: vol('down')),
+		('XF86AudioRaiseVolume',lambda k: vol('up')),
+		('XF86AudioMute',	lambda k: vol('mute')),
 		('XF86AudioPlay',	lambda k: music("Play/Pause")),
 		('XF86AudioPause',	lambda k: music("Play/Pause")),
 		('XF86AudioStop',	lambda k: music("Stop")),
@@ -43,43 +41,15 @@ def toggle_trackpad():
 	import trackpad
 	trackpad.toggle_trackpad()
 
+@notify_exception
 def locknow():
 	import lock
 	lock.locknow()
 
 @notify_exception
-def vol(adjust):
-	# FIXME: Allow mixer control to be configured
-	# FIXME: This is not the same scale as used by alsamixer
-	import alsaaudio
-	m = alsaaudio.Mixer()
-	nv = ov = m.getvolume()[0]
-	small_adjust = adjust / abs(adjust)
-
-	v = ov + adjust
-	if v > 100: v = 100
-	elif v < 0: v = 0
-
-	while nv == ov:
-		m.setvolume(v)
-		nv = m.getvolume()[0]
-		v = v + small_adjust
-		if v > 100 or v < 0:
-			break
-	notify("%s: %d%%" % (m.mixer(), nv), key='mixer')
-
-def vol_up(): return vol(mixer_delta)
-def vol_down(): return vol(-mixer_delta)
-
-@notify_exception
-def vol_mute():
-	# FIXME: Allow mixer control to be configured
-	import alsaaudio
-	m = alsaaudio.Mixer()
-	v = m.getmute()[0]
-	v = 0 if v else 1
-	m.setmute(v)
-	notify("%s: %s" % (m.mixer(), 'off' if m.getmute()[0] else 'on'), key='mixer')
+def vol(command):
+	import mixer
+	getattr(mixer, 'vol_%s'%command)()
 
 @notify_exception
 def music(command):
@@ -98,7 +68,6 @@ def try_launch(app):
 # '$MODKEY-XF86AudioRaiseVolume':	music "Volume Up"
 # '$MODKEY-XF86AudioMute':	volumeMute "$VOLUME_MIXER_CONTROL"
 # 'XF86Display':	displayStatus `date +"%T"`" XF86Display Pressed" 10
-# 'XF86TouchpadToggle':	displayStatus 'FIXME: Toggle touchpad'
 
 # 'Caps_Lock':	updateCapsLockDisplay
 # 'Num_Lock':	updateNumLockDisplay

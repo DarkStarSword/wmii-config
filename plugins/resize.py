@@ -1,5 +1,6 @@
 #!/bin/echo Don't call me directly
 
+import pluginmanager
 from pygmi import keys, Tag
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 #!/bin/echo Don't call me directly
 
-from pygmi import defmonitor, wmii
 from pluginmanager import notify_exception
+from pygmi import defmonitor, wmii
 
 sysdir='/sys/class/power_supply/BAT0'
 

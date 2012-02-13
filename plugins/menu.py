@@ -1,8 +1,16 @@
 #!/bin/echo Don't call me directly
 
+from pluginmanager import notify
+
 import pygmi
 
-from pluginmanager import notify
+def inthread(name, args, action, **kwargs):
+	import inspect
+	inthread = pygmi.menu.inthread
+	if len(inspect.getargspec(inthread).args) == 3:
+		return inthread(name, args, action, **kwargs)
+	else:
+		return inthread(args, action, **kwargs)
 
 import inspect
 if 'prompt' in inspect.getargspec(pygmi.Menu.__init__).args:
@@ -27,7 +35,7 @@ else:
 			args += ['-n', self.nhist]
 		    if self.prompt or prompt:
 			args += ['-p', prompt if prompt is not None else self.prompt]
-		    return pygmi.menu.inthread('Menu', map(str, args), self.action, input='\n'.join(choices))
+		    return inthread('Menu', map(str, args), self.action, input='\n'.join(choices))
 
 		call = __call__
 

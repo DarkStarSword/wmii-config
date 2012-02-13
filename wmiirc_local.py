@@ -1,5 +1,7 @@
 import os
 
+import plugins.pluginmanager # Should be done before import pygmi to make sure path is set up
+
 import wmiirc
 from pygmi import *
 
