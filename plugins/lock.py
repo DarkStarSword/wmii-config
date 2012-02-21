@@ -5,6 +5,7 @@ import pluginmanager
 
 from pluginmanager import notify
 
+timeout = 5
 margin = 5
 
 xautolock = None
@@ -45,8 +46,8 @@ def spawnAutoLock():
 	global xautolock
 
 	termAutoLock()
-	xautolock = subprocess.Popen('xautolock -time 1 -locker'.split() +
-			[selfFile(), '-notify', str(margin), '-notifier', selfFile() + ' -n'])
+	xautolock = subprocess.Popen(['xautolock', '-time', timeout, '-locker',
+			selfFile(), '-notify', str(margin), '-notifier', selfFile() + ' -n'])
 	# Prevent xautolock becoming a zombie if something kills it:
 	# I could also use this to set up any cleanup I might want
 	threading.Thread(target = lambda: xautolock.wait(), name='XAutoLock-Waiter').start()
@@ -129,9 +130,21 @@ def registerKeyBindings():
 	from pygmi import keys
 	keys.bind('main', (
 		"Screen Locking",
+		('Mod4-grave', "Lock Screen Now",
+			lambda k: locknow()),
+		('Mod4-shift-grave', "Toggle automatic locking",
+			lambda k: toggleAutoLock()),
+	))
+
+def registerTraditionalKeyBindings():
+	from pygmi import keys
+	keys.bind('main', (
+		"Screen Locking",
 		('Mod1-Control-l', "Lock Screen Now",
 			lambda k: locknow()),
 		('Mod4-grave', "Toggle automatic locking",
+			lambda k: toggleAutoLock()),
+		('Mod4-shift-grave', "Toggle automatic locking",
 			lambda k: toggleAutoLock()),
 	))
 
