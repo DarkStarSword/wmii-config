@@ -46,8 +46,8 @@ def spawnAutoLock():
 	global xautolock
 
 	termAutoLock()
-	xautolock = subprocess.Popen(['xautolock', '-time', timeout, '-locker',
-			selfFile(), '-notify', str(margin), '-notifier', selfFile() + ' -n'])
+	xautolock = subprocess.Popen(map(str,['xautolock', '-time', timeout, '-locker',
+			selfFile(), '-notify', str(margin), '-notifier', selfFile() + ' -n']))
 	# Prevent xautolock becoming a zombie if something kills it:
 	# I could also use this to set up any cleanup I might want
 	threading.Thread(target = lambda: xautolock.wait(), name='XAutoLock-Waiter').start()
