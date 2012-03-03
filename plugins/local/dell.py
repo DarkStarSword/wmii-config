@@ -2,6 +2,7 @@ from pluginmanager import notify, notify_exception
 
 from launch import launch, _launch
 import os, background
+import subprocess
 
 from pygmi import *
 
@@ -19,38 +20,50 @@ keys.bind('main', (
 @notify_exception
 def apply_wacom():
 
-	dev_name = 'Wacom Intuos3 9x12 cursor' # Used to come up as pad, not cursor
-	# (Default mouse button mappings in brackets)
-	#   +-----+-----+ +-------+   \    +-------+ +-----+-----+
-	#   |     |     | |       |    \   |       | |  5  |     |
-	#   |     |  1  | |  ^    |    /   |    ^  | |     |     |
-	#   |     |     | |  |(4) |   /    | (4)|  | |  (9)|     |
-	#   |  3  +-----+ |  |    |   \    |    |  | +-----+  7  |
-	#   |     |     | |       |    \   |       | |  6  |     |
-	#   |     |  2  | |       |    /   |       | |     | (11)|
-	#   |     |     | |  |    |   /    |    |  | | (10)|     |
-	#   +-----+-----+ |  |(5) |   \    | (5)|  | +-----+-----+
-	#   |     4     | |  v    |    \   |    v  | |     8     |
-	#   |        (8)| |       |    /   |       | |       (12)|
-	#   +-----------+ +-------+   /    +-------+ +-----------+
-	mapping = {
+	# NOTE: Different versions of xsetwacom have different mappings, yours
+	# may vary! If you don't have a "pad", try "cursor" or upgrade.
+	dev_name = 'Wacom Intuos3 9x12 pad'
+	#   +-----+-----+ +-------+   \    +-------+ +------+------+
+	#   |     |     | |       |    \   |       | |      |      |
+	#   |     |  1  | |  ^    |    /   |    ^  | |   9  |      |
+	#   |     |     | |  |(4) |   /    | (4)|  | |      |      |
+	#   |  3  +-----+ |  |    |   \    |    |  | +------+  11  |
+	#   |     |     | |       |    \   |       | |      |      |
+	#   |     |  2  | |       |    /   |       | |  10  |      |
+	#   |     |     | |  |    |   /    |    |  | |      |      |
+	#   +-----+-----+ |  |(5) |   \    | (5)|  | +------+------+
+	#   |     8     | |  v    |    \   |    v  | |     12      |
+	#   |           | |       |    /   |       | |             |
+	#   +-----------+ +-------+   /    +-------+ +-------------+
+	mapping = (
+			# NOTE: BE SURE TO MAP THE STRIPS BEFORE THE BUTTONS
+			# DUE TO A BUG IN THE WACOM STACK WHICH ERRANEOUSELY
+			# MAPS BUTTONS 1-4 WHEN THE STRIPS ARE MAPPED
+			('StripLeftUp',    'key +ctrl button 4 key -ctrl'),
+			('StripLeftDown',  'key +ctrl button 5 key -ctrl'),
+			# ('StripRightUp',   'key k'),
+			# ('StripRightDown', 'key j'),
+
 			# Defaults set for Windows:
-			'Button1': 'key shift',
-			'Button2': 'key alt',
-			'Button3': 'key ctrl',
-			'Button4': 'key space',
+			('Button 1', 'key shift'),
+			('Button 2', 'key alt'),
+			('Button 3', 'key ctrl'),
+			('Button 8', 'key +space'),
 
-			'Button5': 'key rshift',
-			'Button6': 'key ralt',
-			'Button7': 'key rctrl',
-			'Button8': 'key space',
-
-			# remapping StripLUp, etc. doesn't seem to be working for me...
-		}
+			('Button 9',  'key rshift'),
+			('Button 10', 'key ralt'),
+			('Button 11', 'key rctrl'),
+			('Button 12', 'key +space'),
+		)
 
 	notify("Applying Wacom Tablet settings")
-	for (prop, action) in mapping.items():
-		_launch(['xsetwacom', 'set', dev_name, prop, action])
+	# Work around a bug in the wacom stack causing the buttons to override
+	# the strips (similar, but opposite to above bug note) by doing
+	# everything twice:
+	for i in range(2):
+		for (prop, action) in mapping:
+			# Wait for termination to avoid race:
+			subprocess.call(['xsetwacom', 'set', dev_name] + prop.split() + [action])
 
 @notify_exception
 def fixX11():
