@@ -7,7 +7,7 @@ from pygmi import call
 
 class terminal(tuple):
 	def __new__(self, command, bw=False, sleep=False):
-		sleep = True # wtf is going on? Today just about everything needs this workaround to get the size right initially and doesn't resize properly, partially fixed by unset ROWS and COLUMNS in .zshenv
+		# sleep = True # wtf is going on? Today just about everything needs this workaround to get the size right initially and doesn't resize properly, partially fixed by unset ROWS and COLUMNS in .zshenv
 
 		if isinstance(command, str):
 			command = [command]
@@ -31,9 +31,10 @@ class terminal(tuple):
 @async
 @notify_exception
 def _launch(args, background=True):
+	import os
 	if type(args) == str:
 		args = ('wmiir', 'setsid', args)
-	call(*args, background=background)
+	call(*args, background=background, env=os.environ) # Passing os.environ fixes the LINES/COLUMNS bug... wtf?
 	# FIXME: Report missing apps - NOTE: xterm would always launch (and
 	# pygmi.call doesn't report failure), so I should actually check for
 	# existance
