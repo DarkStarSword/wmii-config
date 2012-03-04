@@ -89,11 +89,14 @@ def notify_exception(arg):
 		def wrap2(*args):
 			try: return f(*args)
 			except Exception, e:
+				if hasattr(e, 'notified') and e.notified == True:
+					raise # Already notified, just pass back up the stack
 				if comment:
 					notify('%s %s: %s' % (e.__class__.__name__, comment, e))
 				else:
 					notify('%s: %s' % (e.__class__.__name__, e))
-				raise # If we have the interpreter up, this will still allow it to print the whole back trace
+				e.notified = True # Prevent further notify_exception wrappers from notifying this again
+				raise e # If we have the interpreter up, this will still allow it to print the whole back trace
 		return wrap2
 	if isinstance(arg, str):
 		comment = arg
