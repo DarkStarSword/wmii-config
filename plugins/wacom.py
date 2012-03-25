@@ -38,7 +38,24 @@ mappings = {
 				('Button 10', 'key ralt'),
 				('Button 11', 'key rctrl'),
 				('Button 12', 'key +space'),
-			)
+			),
+
+			'gimp': (
+				('StripLeftUp',    'button 4'),
+				('StripLeftDown',  'button 5'),
+				('StripRightUp',   'key +ctrl button 4 key -ctrl'),
+				('StripRightDown', 'key +ctrl button 5 key -ctrl'),
+
+				('Button 1', 'key ctrl z'),
+				('Button 2', 'key alt'),
+				('Button 3', 'key ctrl'),
+				('Button 8', 'key +space'),
+
+				('Button 9',  'key PgUp'),
+				('Button 10', 'key PgDn'),
+				('Button 11', 'key rctrl'),
+				('Button 12', 'key +space'),
+			),
 		}
 	}
 

@@ -23,7 +23,7 @@ def fixX11():
 	_launch("setxkbmap -option terminate:ctrl_alt_bksp".split())
 	_launch("setxkbmap -option keypad:pointerkeys".split())
 
-	wacom.apply_profile('Wacom Intuos3 9x12 pad', 'default')
+	wacom.apply_profile('Wacom Intuos3 9x12 pad', 'gimp')
 
 fixX11()
 
