@@ -86,8 +86,8 @@ def notify_exception(arg):
 	comment = None
 	def wrap1(f):
 		@functools.wraps(f)
-		def wrap2(*args):
-			try: return f(*args)
+		def wrap2(*args, **kwargs):
+			try: return f(*args, **kwargs)
 			except Exception, e:
 				if hasattr(e, 'notified') and e.notified == True:
 					raise # Already notified, just pass back up the stack
@@ -186,6 +186,21 @@ def reload_wmiirc_local(args = ''):
 	if args.strip() != '':
 		notify('WARNING: reload_wmiirc_local unexpected argument: %s, IGNORING' % args)
 	notify(__load_plugin('wmiirc_local'))
+
+@notify_exception
+def persist():
+	'''
+	Returns a dictionary suitable for settings that must persist across
+	module reloads.
+
+	Currently this creates a fake module named persist that could later be
+	imported, but that is an implementation detail - it is recommended to
+	always call this function to gain access to the persist object.
+	'''
+	import sys
+	if 'persist' not in sys.modules:
+		sys.modules['persist'] = dict()
+	return sys.modules['persist']
 
 if __name__ == '__main__':
 	import os

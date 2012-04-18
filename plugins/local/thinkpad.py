@@ -3,6 +3,9 @@ from pygmi import *
 from pluginmanager import notify, notify_exception
 from launch import launch, _launch
 import wacom
+import xdg
+
+xdg.ignore_only_shown_in_filenames = ['ibm-asset-management.desktop', 'ibm-registration-tool.desktop']
 
 keys.bind('main', (
 	"ThinkPad specific keys",

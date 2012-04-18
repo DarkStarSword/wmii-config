@@ -1,12 +1,16 @@
 #!/bin/echo Don't run me directly
 
-from pluginmanager import notify, notify_exception, async
+from pluginmanager import notify, notify_exception, async, imported_from_wmiirc
 
-import wmiirc
 from pygmi import call
 
 class terminal(tuple):
 	def __new__(self, command, bw=False, sleep=False):
+		if imported_from_wmiirc():
+			import wmiirc
+			term = wmiirc.terminal
+		else:
+			term = ['wmiir', 'setsid', 'xterm']
 		# sleep = True # wtf is going on? Today just about everything needs this workaround to get the size right initially and doesn't resize properly, partially fixed by unset ROWS and COLUMNS in .zshenv
 
 		if isinstance(command, str):
@@ -21,7 +25,7 @@ class terminal(tuple):
 		colours = '-bg Black -fg White'.split() if bw else ''
 		orig_command = ' '.join(orig_command)
 
-		tmp = super(self, terminal).__new__(self, list(wmiirc.terminal) + list(colours) + ['-title', orig_command, '-e'] + list(command))
+		tmp = super(self, terminal).__new__(self, list(term) + list(colours) + ['-title', orig_command, '-e'] + list(command))
 		tmp.command = orig_command
 		return tmp
 
@@ -30,11 +34,13 @@ class terminal(tuple):
 
 @async
 @notify_exception
-def _launch(args, background=True):
+def _launch(args, background=True, shell=False):
 	import os
 	if type(args) == str:
 		args = ('wmiir', 'setsid', args)
-	call(*args, background=background, env=os.environ) # Passing os.environ fixes the LINES/COLUMNS bug... wtf?
+	if shell:
+		args = (' '.join(args),)
+	call(*args, background=background, env=os.environ, shell=shell) # Passing os.environ fixes the LINES/COLUMNS bug... wtf?
 	# FIXME: Report missing apps - NOTE: xterm would always launch (and
 	# pygmi.call doesn't report failure), so I should actually check for
 	# existance

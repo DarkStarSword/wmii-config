@@ -132,3 +132,21 @@ resize.register_corner_resize_keys()
 # 	updateNumLockDisplay
 
 keys.mode = keys.mode # Refresh current key bindings - only required when [re]loading plugin after event loop starts
+
+
+
+
+
+
+
+###### NOTE: ALMOST EVERYTHING SHOULD GO ABOVE THIS LINE WITHOUT A GOOD REASON ######
+# Apply any local settings
+try:
+	import plugins.local
+except ImportError:
+	pass
+
+# Run xdg autostart, we do this after applying local settings to allow local to
+# override some settings *before* doing the actual autostart:
+import plugins.xdg
+plugins.xdg.autostart_once()
