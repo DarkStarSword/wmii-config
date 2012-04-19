@@ -154,7 +154,8 @@ def keepLockEmpty():
 	from pygmi import events, Match, Client
 	def retag(event, tag, client):
 		print 'retagging', client
-		Client(client).tags = '+'.join(map(str, range(10)))
+		if Client(client).tags != '+/./':
+			Client(client).tags = '+'.join(map(str, range(10)))
 	if keepLockEmptyKey is not None:
 		unload()
 	keepLockEmptyKey = Match('ViewAttach', '!lock')
