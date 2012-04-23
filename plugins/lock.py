@@ -71,14 +71,14 @@ def keepScreenOff(process):
 		time.sleep(5)
 	process.wait()
 
-def _locknow():
+def _locknow(daemon = True):
 	# NOTE: We are not necessarily in the same process that performed the
 	# setup - don't import wmiirc!
 	import threading, time
 	from pygmi import Tags
 	tags = Tags()
 
-	notify('Locking now')
+	notify('Locking now', daemon = daemon)
 
 	cur = tags.sel # NOTE: Only updated in Tags.__init__()
 	tags.select('!lock')
@@ -100,7 +100,7 @@ def _locknow():
 
 def locknow(daemon = True):
 	import threading
-	t = threading.Thread(target = _locknow, name='Lock-Now')
+	t = threading.Thread(target = _locknow, name='Lock-Now', kwargs={'daemon': daemon})
 	t.daemon = daemon
 	t.start()
 
@@ -184,7 +184,7 @@ def main():
 			events.loop() # We are called from the command line to do setup, so start the event loop
 			xautolock.wait() # Wait on xautolock since we were called directly from the command line
 		elif sys.argv[1] == '-n':
-			notify('Screen about to lock...')
+			notify('Screen about to lock...', daemon = False)
 		else:
 			usage()
 	else:

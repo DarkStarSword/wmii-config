@@ -19,7 +19,7 @@ if 'errcolors' not in wmii.cache:
 # Based partly on wmiirc.Notice
 from pygmi import Button, wmii
 class Notice(Button):
-	def __init__(self, key, timeout=5, pos='left', colours='notifycolors'):
+	def __init__(self, key, timeout=5, pos='left', colours='notifycolors', **kwargs):
 		self.key = key
 		if isinstance(colours, str):
 			colours = wmii.cache[colours]
@@ -38,7 +38,7 @@ class Notice(Button):
 				del notices[self.key]
 			Button.remove(self)
 
-	def __call__(self, notice, timeout=None, colours=None, **kwargs):
+	def __call__(self, notice, timeout=None, colours=None, daemon=True, **kwargs):
 		from threading import Timer
 		if self.timer:
 			self.timer.cancel()
@@ -47,7 +47,7 @@ class Notice(Button):
 			colours = wmii.cache[colours]
 		self.create(colours, notice)
 		self.timer = Timer(timeout or self.timeout, self.remove)
-		self.timer.daemon = True
+		self.timer.daemon = daemon
 		self.timer.start()
 
 from threading import Lock
