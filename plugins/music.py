@@ -48,8 +48,11 @@ def command(command):
 		music_status.active = False
 		return
 
-	notify('%s: %s' % (name, command), key='music')
-	player.commands[command]()
+	ret = player.commands[command]()
+	if ret is not None:
+		notify('%s: %s' % (name, ret), key='music')
+	else:
+		notify('%s: %s' % (name, command), key='music')
 
 	init_status(player)
 

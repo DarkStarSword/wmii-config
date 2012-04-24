@@ -28,15 +28,18 @@ def cmus_info():
 	output = subprocess.check_output('cmus-remote -Q'.split()).split('\n')
 	tags = {}
 	status = {}
+	settings = {}
 	for item in map(str.split, output):
 		if len(item) > 2 and item[0] == 'tag':
 			tags[item[1]] = ' '.join(item[2:])
+		elif len(item) > 2 and item[0] == 'set':
+			settings[item[1]] = ' '.join(item[2:])
 		elif len(item) > 1 and item[0] in 'status file duration position'.split():
 			status[item[0]] = ' '.join(item[1:])
-	return (status, tags)
+	return (status, tags, settings)
 
 def status():
-	(status, tags) = cmus_info()
+	(status, tags, _) = cmus_info()
 	#print (status, tags)
 	if status['status'] == 'playing':
 		tmp = ''
@@ -54,14 +57,23 @@ def status():
 def cmus_command(*args):
 	subprocess.check_call(['cmus-remote'] + list(args))
 
+def cmus_vol(delta):
+	cmus_command('-v', delta)
+	(_, _, settings) = cmus_info()
+	l = settings['vol_left']
+	r = settings['vol_right']
+	if l == r:
+		return '%s%%' % l
+	return 'L:%s%% R:%s%%' % (l,r)
+
 commands = {
 	'Play': lambda: cmus_command('-p'),
 	'Play/Pause': lambda: cmus_command('-u'),
 	'Stop': lambda: cmus_command('-s'),
 	'Previous Track': lambda: cmus_command('-r'),
 	'Next Track': lambda: cmus_command('-n'),
-	'Volume Up': lambda: cmus_command('-v', '+%i%%' % vol_delta),
-	'Volume Down': lambda: cmus_command('-v', '-%i%%' % vol_delta),
+	'Volume Up': lambda: cmus_vol('+%i%%' % vol_delta),
+	'Volume Down': lambda: cmus_vol('-%i%%' % vol_delta),
 }
 
 music.register_music_backend('cmus', module)
