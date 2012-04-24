@@ -21,6 +21,7 @@ apps.calendar		= terminal('wyrd', sleep=True) # Sleep is to avoid race condition
 apps.networkManager	= terminal('wicd-curses')
 apps.calculator		= terminal('calc')
 apps.bluetoothManager	= 'blueman-manager'
+apps.mixer		= 'pavucontrol'
 
 monitors['load'].active = False
 

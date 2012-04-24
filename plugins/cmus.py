@@ -7,6 +7,8 @@ module = sys.modules[__name__]
 from pluginmanager import notify_exception
 import music
 
+vol_delta = 5
+
 if __name__ == '__main__':
 	print "Don't call me directly"
 	sys.exit(0)
@@ -58,8 +60,8 @@ commands = {
 	'Stop': lambda: cmus_command('-s'),
 	'Previous Track': lambda: cmus_command('-r'),
 	'Next Track': lambda: cmus_command('-n'),
-	'Volume Up': lambda: cmus_command('-v', '+%i' % vol_delta),
-	'Volume Down': lambda: cmus_command('-v', '-%i' % vol_delta),
+	'Volume Up': lambda: cmus_command('-v', '+%i%%' % vol_delta),
+	'Volume Down': lambda: cmus_command('-v', '-%i%%' % vol_delta),
 }
 
 music.register_music_backend('cmus', module)

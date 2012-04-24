@@ -7,6 +7,8 @@ module = sys.modules[__name__]
 from pluginmanager import notify_exception
 import music
 
+vol_delta = 5
+
 if __name__ == '__main__':
 	print "Don't call me directly"
 	sys.exit(0)
