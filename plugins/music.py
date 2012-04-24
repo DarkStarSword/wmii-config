@@ -88,7 +88,8 @@ def init_status(player = None):
 
 	if hasattr(player, 'status'):
 		music_status.status = player.status
-		music_status.active = True
+		if not music_status.active:
+			music_status.active = True
 
 def init():
 	for plugin in autoloadMusicBackends:
