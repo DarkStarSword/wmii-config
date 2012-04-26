@@ -29,6 +29,10 @@ def mocp_info():
 	output = [ line.split(': ', 1) for line in output if line.split() ]
 	return dict(output)
 
+def is_playing():
+	info = mocp_info()
+	return info['State'] == 'PLAY'
+
 def status():
 	info = mocp_info()
 	#print info

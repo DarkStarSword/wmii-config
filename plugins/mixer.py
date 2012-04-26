@@ -62,6 +62,21 @@ def vol(adjust):
 def vol_up(): return vol(mixer_delta)
 def vol_down(): return vol(-mixer_delta)
 
+@notify_exception
+def intel_vol(command):
+	try:
+		import music
+		if music.is_playing():
+			music.command('Volume %s' % command.title())
+			return
+	except ImportError:
+		pass
+
+	if command == 'up': vol_up()
+	elif command == 'down': vol_down()
+	else:
+		raise KeyError('Unknown command: %s' % command)
+
 def vol_mute():
 	m = def_mixer()
 	v = m.getmute()[0]

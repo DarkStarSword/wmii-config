@@ -38,6 +38,10 @@ def cmus_info():
 			status[item[0]] = ' '.join(item[1:])
 	return (status, tags, settings)
 
+def is_playing():
+	(status, tags, _) = cmus_info()
+	return status['status'] == 'playing'
+
 def status():
 	(status, tags, _) = cmus_info()
 	#print (status, tags)

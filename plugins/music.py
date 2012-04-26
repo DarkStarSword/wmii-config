@@ -39,6 +39,12 @@ def music_player_running():
 			return (name, module)
 	return (None, None)
 
+def is_playing():
+	(name, player) = music_player_running()
+	if player is None:
+		return False
+	return player.is_playing()
+
 @async
 @notify_exception
 def command(command):

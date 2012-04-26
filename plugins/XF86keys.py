@@ -13,10 +13,10 @@ for mode in keys.modelist:
 		('XF86ScreenSaver',		lambda k: locknow()),
 		('XF86Sleep',			lambda k: locknow()),
 		('XF86Suspend',			lambda k: locknow()),
-		('XF86AudioLowerVolume',	lambda k: vol('down')),
-		('XF86AudioRaiseVolume',	lambda k: vol('up')),
-		('%(mod)s-XF86AudioLowerVolume',lambda k: music('Volume Down')),
-		('%(mod)s-XF86AudioRaiseVolume',lambda k: music('Volume Up')),
+		('XF86AudioLowerVolume',	lambda k: intel_vol('down')),
+		('XF86AudioRaiseVolume',	lambda k: intel_vol('up')),
+		('%(mod)s-XF86AudioLowerVolume',lambda k: vol('down')),
+		('%(mod)s-XF86AudioRaiseVolume',lambda k: vol('up')),
 		('XF86AudioMute',		lambda k: vol('mute')),
 		('%(mod)s-XF86AudioMute',	lambda k: try_launch('mixer')),
 		('XF86AudioPlay',		lambda k: music("Play/Pause")),
@@ -53,6 +53,11 @@ def locknow():
 def vol(command):
 	import mixer
 	getattr(mixer, 'vol_%s'%command)()
+
+@notify_exception
+def intel_vol(command):
+	import mixer
+	mixer.intel_vol(command)
 
 @notify_exception
 def music(command):
