@@ -69,6 +69,9 @@ def next_track():
 	else:
 		mocp_command('-f') # Next
 
+def mute():
+	return 'mute unimplemented'
+
 commands = {
 	'Play': lambda: mocp_command('-p'),
 	'Play/Pause': play_pause,
@@ -77,6 +80,7 @@ commands = {
 	'Next Track': next_track,
 	'Volume Up': lambda: mocp_command('-v', '+%i' % vol_delta),
 	'Volume Down': lambda: mocp_command('-v', '-%i' % vol_delta),
+	'Mute': mute
 }
 
 music.register_music_backend('mocp', module)

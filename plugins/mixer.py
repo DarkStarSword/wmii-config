@@ -67,15 +67,15 @@ def intel_vol(command):
 	try:
 		import music
 		if music.is_playing():
-			music.command('Volume %s' % command.title())
+			if command in ('up', 'down'):
+				music.command('Volume %s' % command.title())
+			else:
+				music.command(command.title())
 			return
 	except ImportError:
 		pass
 
-	if command == 'up': vol_up()
-	elif command == 'down': vol_down()
-	else:
-		raise KeyError('Unknown command: %s' % command)
+	globals()['vol_%s'%command]()
 
 def vol_mute():
 	m = def_mixer()

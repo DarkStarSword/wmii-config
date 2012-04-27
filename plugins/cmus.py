@@ -8,6 +8,7 @@ from pluginmanager import notify_exception
 import music
 
 vol_delta = 5
+_last_vol = 100
 
 if __name__ == '__main__':
 	print "Don't call me directly"
@@ -61,14 +62,29 @@ def status():
 def cmus_command(*args):
 	subprocess.check_call(['cmus-remote'] + list(args))
 
-def cmus_vol(delta):
-	cmus_command('-v', delta)
+def _cmus_vol():
 	(_, _, settings) = cmus_info()
 	l = settings['vol_left']
 	r = settings['vol_right']
+	return map(int, (l, r))
+
+def cmus_vol(delta):
+	cmus_command('-v', delta)
+	(l, r) = _cmus_vol()
 	if l == r:
 		return '%s%%' % l
 	return 'L:%s%% R:%s%%' % (l,r)
+
+def mute():
+	global _last_vol
+
+	v = min(_cmus_vol())
+	if v:
+		_last_vol = v
+		cmus_command('-v', '0%')
+	else:
+		cmus_command('-v', '%d%%' % _last_vol)
+		return '%s%%' % _last_vol
 
 commands = {
 	'Play': lambda: cmus_command('-p'),
@@ -78,6 +94,7 @@ commands = {
 	'Next Track': lambda: cmus_command('-n'),
 	'Volume Up': lambda: cmus_vol('+%i%%' % vol_delta),
 	'Volume Down': lambda: cmus_vol('-%i%%' % vol_delta),
+	'Mute': mute,
 }
 
 music.register_music_backend('cmus', module)
