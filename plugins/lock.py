@@ -75,28 +75,41 @@ def _locknow(daemon = True):
 	# NOTE: We are not necessarily in the same process that performed the
 	# setup - don't import wmiirc!
 	import threading, time
-	from pygmi import Tags
+	from pygmi import Tags, keys
 	tags = Tags()
 
-	notify('Locking now', daemon = daemon)
+	try:
+		notify('Locking now', daemon = daemon)
 
-	cur = tags.sel # NOTE: Only updated in Tags.__init__()
-	tags.select('!lock')
+		# Disable keyboard:
+		keys.mode = 'passthrough'
 
-	# xtrlock sometimes fails if started immediately after changing tags...
-	# I'm guessing this is a race while X hides windows and xtrlock starts.
-	time.sleep(0.15)
+		cur = tags.sel # NOTE: Only updated in Tags.__init__()
+		tags.select('!lock')
 
-	xtrlock = subprocess.Popen('xtrlock')
-	#xtrlock = subprocess.Popen('strace xtrlock'.split()) # 'tis difficult to debug
+		# xtrlock doesn't seem to like starting if a key that wmii has
+		# grabbed is being held down. We change the key mode to
+		# passthrough above to remove these grabs, but if the lock key
+		# itself has not yet been released that won't help. Sleep here
+		# to give the user plenty of time to remove their fingers (at
+		# this point we have already switched tags so they have some
+		# indication that the screen is about to lock):
+		time.sleep(0.5)
 
-	t = threading.Thread(target = keepScreenOff, args=[xtrlock], name='Keep-Screen-Off')
-	t.daemon = True # Don't prevent termination
-	t.start()
+		xtrlock = subprocess.Popen('xtrlock')
+		#xtrlock = subprocess.Popen('strace xtrlock'.split()) # 'tis difficult to debug
 
-	xtrlock.wait()
+		t = threading.Thread(target = keepScreenOff, args=[xtrlock], name='Keep-Screen-Off')
+		t.daemon = True # Don't prevent termination
+		t.start()
+		# Just in case the user switched tags while we were waiting:
+		tags.select('!lock')
 
-	tags.select(cur)
+		xtrlock.wait()
+
+	finally:
+		keys.mode = 'main'
+		tags.select(cur)
 
 def locknow(daemon = True):
 	import threading
