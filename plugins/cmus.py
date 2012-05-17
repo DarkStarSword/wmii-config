@@ -86,9 +86,14 @@ def mute():
 		cmus_command('-v', '%d%%' % _last_vol)
 		return '%s%%' % _last_vol
 
+def play_pause():
+	cmus_command('-u');
+	(status, _, _) = cmus_info()
+	return status['status'].title()
+
 commands = {
 	'Play': lambda: cmus_command('-p'),
-	'Play/Pause': lambda: cmus_command('-u'),
+	'Play/Pause': play_pause,
 	'Stop': lambda: cmus_command('-s'),
 	'Previous Track': lambda: cmus_command('-r'),
 	'Next Track': lambda: cmus_command('-n'),
