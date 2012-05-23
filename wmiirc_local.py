@@ -9,7 +9,6 @@ from plugins.launch import launch, launch_music_player, terminal, apps
 from plugins import lock, music, unload, resize, display, background
 
 apps.webBrowser		= 'iceweasel'
-apps.quickWebBrowser	= terminal('w3m', bw=True)
 apps.emailClient	= terminal('sup-mail', bw=True)
 apps.RSSReader		= terminal('canto')
 apps.python		= terminal('ipython', bw=True)
@@ -22,6 +21,7 @@ apps.networkManager	= terminal('wicd-curses')
 apps.calculator		= terminal('calc')
 apps.bluetoothManager	= 'blueman-manager'
 apps.mixer		= 'pavucontrol'
+apps.voip		= 'mumble'
 
 monitors['load'].active = False
 
@@ -39,8 +39,7 @@ background.set_background(os.path.expanduser('~/desktop.jpg'))
 
 keys.bind('main', (
 	"Ian's custom key bindings",
-	('%(mod)s-q', "Launch quick web browser",
-		lambda k: launch(apps.quickWebBrowser)),
+	# q is unbound
 	('%(mod)s-w', "Launch web browser",
 		lambda k: launch(apps.webBrowser)),
 	('%(mod)s-e', "Launch email client",
@@ -57,14 +56,16 @@ keys.bind('main', (
 		lambda k: launch(apps.IRCClient)),
 	('%(mod)s-o', "Launch 2nd music player",
 		lambda k: launch_music_player(apps.otherMusicPlayer)),
-	# FIXME: rebind '%(mod)s-a' to mod-shift-a
-	# TODO: bind '%(mod)s-a' to finch
+	# p is wmii key
+	# [,] are unbound
+
+	# a is wmii key, mod+shift++a:
 	('%(mod)s-Shift-a', "Launch instant messaging client",
 		lambda k: launch(apps.IMClient)),
-# # Key $MODKEY-a FUNCTIONALITY MOVED TO PYTHON
-# 	# launchIMClient
+	# s,d,f are wmii keys
 	('%(mod)s-g', "Launch calendar",
 		lambda k: launch(apps.calendar)),
+	# h,j,k,l are wmii keys
 
 	('%(mod)s-z', "Previous Track",
 		lambda k: music.command('Previous Track')),
@@ -74,6 +75,8 @@ keys.bind('main', (
 		lambda k: music.command('Play/Pause')),
 	('%(mod)s-v', "Stop",
 		lambda k: music.command('Stop')),
+	('%(mod)s-Shift-v', "Launch VoIP client",
+		lambda k: launch(apps.voip)),
 	('%(mod)s-b', "Next Track",
 		lambda k: music.command('Next Track')),
 	('%(mod)s-Shift-b', "Launch bluetooth manager",
@@ -81,6 +84,7 @@ keys.bind('main', (
 
 	('%(mod)s-n', "Launch network manager",
 		lambda k: launch(apps.networkManager)),
+	# , & . are unbound
 	('%(mod)s-slash', "Launch calculator",
 		lambda k: launch(apps.calculator)),
 
