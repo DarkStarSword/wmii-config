@@ -96,7 +96,8 @@ def notify_exception(arg):
 				else:
 					notify('%s: %s' % (e.__class__.__name__, e))
 				e.notified = True # Prevent further notify_exception wrappers from notifying this again
-				raise e # If we have the interpreter up, this will still allow it to print the whole back trace
+				#raise e # If we have the interpreter up, this will still allow it to print the whole back trace
+				raise
 		return wrap2
 	if isinstance(arg, str):
 		comment = arg

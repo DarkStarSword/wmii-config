@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
+from pluginmanager import notify, notify_exception
+
 import dbus
 import subprocess
-import gobject
-from dbus.mainloop.glib import DBusGMainLoop
-
-from pluginmanager import notify, notify_exception
+import wmiidbus
 from pygmi import wmii
 
 # American spelling is only for consistency with other wmii['...colors']:
@@ -52,15 +51,12 @@ def strip_html(text):
         return text # leave as is
     return re.sub("(?s)<[^>]*>|&#?\w+;", fixup, text)
 
-_thread = None
 _purple = None
-_mainloop = None
-_session_bus = None
 
 def connect_proxy():
 	global _purple
 	try:
-		obj = _session_bus.get_object("im.pidgin.purple.PurpleService", "/im/pidgin/purple/PurpleObject")
+		obj = wmiidbus.get_session_bus().get_object("im.pidgin.purple.PurpleService", "/im/pidgin/purple/PurpleObject")
 		_purple = dbus.Interface(obj, "im.pidgin.purple.PurpleInterface")
 	except:
 		_purple = None
@@ -92,32 +88,15 @@ def add_listeners(bus):
 
 @notify_exception
 def main():
-	global _mainloop, _session_bus
+	session_bus = wmiidbus.get_session_bus()
 
-	DBusGMainLoop(set_as_default=True)
-	gobject.threads_init()
-
-	_session_bus = dbus.SessionBus()
-
-	add_listeners(_session_bus)
-
-	# This thread goes away to run the main loop:
-	_mainloop = gobject.MainLoop() # FIXME: It may not be wise to use the glib main loop, how does it work if I have multiple instances?
-	_mainloop.run()
-
-
-def load():
-	import threading
-	global _thread
-	_thread = threading.Thread(target=main, name='Purple-Dbus-Listener')
-	_thread.daemon = True
-	_thread.start()
+	add_listeners(session_bus)
 
 def unload():
 	global _purple
-	_mainloop.quit()
-	_session_bus.close()
-	_thread.join()
+
+	notify('WARNING: purple unload called, but is unimplemented!')
+	# XXX TODO: disconnect from bus
 	_purple = None
 
-load()
+main()

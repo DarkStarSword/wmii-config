@@ -2,6 +2,7 @@
 
 from pluginmanager import notify, notify_exception
 
+import wmiidbus
 import dbus
 import dbus.service
 
@@ -47,67 +48,24 @@ class libnotify(dbus.service.Object):
 	def CloseNotification(self, id):
 		notify('libnotify.py: Unimplemented CloseNotification called')
 
-_thread = None
-_mainloop = None
-_session_bus = None
 _notify = None
 
 @notify_exception
 def main():
-	global _mainloop, _session_bus, _notify
+	global _notify
 
-	from dbus.mainloop.glib import DBusGMainLoop
-	import gobject
+	session_bus = wmiidbus.get_session_bus()
 
-	DBusGMainLoop(set_as_default=True)
-	gobject.threads_init()
-
-	_session_bus = dbus.SessionBus()
-
-	_notify = libnotify(_session_bus)
-
-	_mainloop = gobject.MainLoop() # FIXME I now have two glib main loops in separate plugins. This to me, seems like a bad idea.
-	_mainloop.run()
-
-def load():
-	print 'load 0'
-	import threading
-	global _thread
-	print 'load 1'
-	_thread = threading.Thread(target=main, name='libnotify')
-	print 'load 2'
-	_thread.daemon = True
-	print 'load 3'
-	_thread.start()
-	print 'load ok'
+	_notify = libnotify(session_bus)
 
 def unload():
-	notify('WARNING: libnotify.py unload called - reloading libnotify.py is known to be buggy!')
-	print 'unload 0'
-	global _mainloop, _session_bus, _thread, _notify
-	print 'unload 1'
-	if _mainloop:
-		print 'unload 2'
-		_mainloop.quit()
-		_mainloop = None
-	print 'unload 3'
-	if _session_bus:
-		print 'unload 4'
-		_session_bus.close()
-		_session_bus = None
-	print 'unload 5'
-	_notify = None
-	print 'unload 9'
-	if _thread:
-		print 'unload 6'
-		_thread.join()
-		_thread = None
-	print 'unload 7'
+	global _notify
 
-if __name__ == '__main__':
-	main()
-else:
-	load()
+	notify('WARNING: libnotify.py unload called, but is unimplemented!')
+	# XXX TODO: disconnect from bus
+	_notify = None
+
+main()
 
 
 # Should look like:
