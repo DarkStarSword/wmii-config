@@ -95,8 +95,12 @@ def main():
 def unload():
 	global _purple
 
-	notify('WARNING: purple unload called, but is unimplemented!')
-	# XXX TODO: disconnect from bus
+	bus = wmiidbus.get_session_bus()
+	bus.remove_signal_receiver(receive_msg, 'ReceivedChatMsg', \
+	    'im.pidgin.purple.PurpleInterface', None, '/im/pidgin/purple/PurpleObject')
+	bus.remove_signal_receiver(receive_msg, 'ReceivedImMsg', \
+	    'im.pidgin.purple.PurpleInterface', None, '/im/pidgin/purple/PurpleObject')
+
 	_purple = None
 
 main()

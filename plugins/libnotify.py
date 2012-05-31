@@ -61,8 +61,15 @@ def main():
 def unload():
 	global _notify
 
-	notify('WARNING: libnotify.py unload called, but is unimplemented!')
-	# XXX TODO: disconnect from bus
+	notify('WARNING: libnotify.py unload called, but it is untested!')
+
+	# NOTE: I haven't quite figured out how to unregister the service. This
+	# at least drops the well known name (which should happen automatically
+	# when bus_name is no longer referenced), but our connection to the bus
+	# continues to expose the notification interface, and reloading the
+	# plugin will fail to register it
+	bus = wmiidbus.get_session_bus()
+	bus.release_name('org.freedesktop.Notifications')
 	_notify = None
 
 main()
