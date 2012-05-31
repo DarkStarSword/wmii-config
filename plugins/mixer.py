@@ -67,6 +67,9 @@ def intel_vol(command):
 	try:
 		import music
 		if music.is_playing():
+			# NOTE: These commands are executed async, so we can't
+			# catch errors here. The music plugin will direct the
+			# request back to us if it can't handle it.
 			if command in ('up', 'down'):
 				music.command('Volume %s' % command.title())
 			else:

@@ -5,7 +5,7 @@ from pluginmanager import notify, notify_exception, async
 
 from pygmi import defmonitor, wmii
 
-autoloadMusicBackends = ['moc', 'cmus']
+autoloadMusicBackends = ['moc', 'cmus', 'spotify']
 registeredMusicBackends = {}
 
 if __name__ == '__main__':
@@ -52,6 +52,17 @@ def command(command):
 	if player is None:
 		notify('No supported music player running')
 		music_status.active = False
+		return
+
+	if command not in player.commands:
+		if command in ['Volume Up', 'Volume Down', 'Mute']:
+			import mixer
+			# This redirection is getting silly... XF86Keys ->
+			# mixer -> music -> mixer... and every time we change
+			# the name of the command...
+			getattr(mixer, 'vol_%s'%command.split()[-1].lower())()
+		else:
+			notify('%s: Unimplemented' % name)
 		return
 
 	ret = player.commands[command]()
