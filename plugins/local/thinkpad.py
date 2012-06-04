@@ -12,7 +12,27 @@ keys.bind('main', (
 	"ThinkPad specific keys",
 	('Mod1-Control-x', "Re-apply X11 settings",
 		lambda k: fixX11()),
+	('%(mod)s-F5', "Change Displays",
+		lambda k: changeDisplays()),
 	))
+
+def changeDisplays():
+	from pluginmanager import Menu
+	import background, display
+	import subprocess
+	profile = Menu(['internal', 'work', 'xrandr'], prompt='Display Profile:')()
+	if profile == 'internal':
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
+		background.set_background()
+		_launch(wmiirc.tray + ('-SE',))
+	elif profile == 'work':
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
+		background.set_background()
+		_launch(wmiirc.tray + ('-SE',))
+	elif profile == 'xrandr':
+		display.changeDisplays()
 
 @notify_exception
 def fixX11():
