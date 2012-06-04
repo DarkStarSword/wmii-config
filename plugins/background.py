@@ -29,8 +29,16 @@ def _set_background():
 
 @notify_exception
 def set_background(file = None):
+	import os
 	global background
-	background = file if file is not None else background
+
+	if file is not None and file != '':
+		if os.path.isfile(file):
+			background = os.path.expanduser(file)
+		else:
+			notify("set_background: %s not found" % file, 'background')
+			return
+
 	if background is None:
 		return
 
@@ -38,3 +46,21 @@ def set_background(file = None):
 	t = threading.Thread(target=_set_background, name='Set-X-Background')
 	t.daemon = True
 	t.start()
+
+def action_set_background(file = ''):
+	if file == '':
+		if background == None:
+			notify('No default background set!', 'background')
+			return
+		else:
+			notify('setting default background...', 'background')
+	else:
+		notify('setting background to %s...' % file, 'background')
+	set_background(file)
+
+if __name__ == '__main__':
+	import actions, sys
+	actions.send('set_background', *sys.argv[1:])
+else:
+	import wmiirc
+	wmiirc.Actions.set_background = action_set_background
