@@ -20,15 +20,22 @@ def changeDisplays():
 	from pluginmanager import Menu
 	import background, display
 	import subprocess
-	profile = Menu(['internal', 'work', 'xrandr'], prompt='Display Profile:')()
+	profile = Menu(['internal', 'work', 'home', 'xrandr'], prompt='Display Profile:')()
 	if profile == 'internal':
-		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
-		subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
+		#subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		#subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
+		subprocess.call('xrandr -s 1600x900'.split())
 		background.set_background()
 		_launch(wmiirc.tray + ('-SE',))
 	elif profile == 'work':
-		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
-		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
+		#subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		#subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
+		subprocess.call('xrandr -s 3200x1200'.split())
+		background.set_background()
+		_launch(wmiirc.tray + ('-SE',))
+	elif profile == 'home':
+		# REMEMBER: Reconfigure meta-modes & associated DPYs first!
+		subprocess.call('xrandr -s 3520x1080'.split())
 		background.set_background()
 		_launch(wmiirc.tray + ('-SE',))
 	elif profile == 'xrandr':
