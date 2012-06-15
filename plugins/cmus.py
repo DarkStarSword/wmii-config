@@ -43,6 +43,17 @@ def is_playing():
 	(status, tags, _) = cmus_info()
 	return status['status'] == 'playing'
 
+def fmt_time(seconds):
+	seconds = int(seconds)
+	mins = seconds / 60
+	secs = seconds % 60
+	hrs  = mins / 60
+	mins = mins % 60
+	if hrs:
+		return '%d:%.2d:%.2d' % (hrs, mins, secs)
+	else:
+		return '%d:%.2d' % (mins, secs)
+
 def status():
 	(status, tags, _) = cmus_info()
 	#print (status, tags)
@@ -56,7 +67,7 @@ def status():
 			tmp += '%s ' % tags['title']
 		else:
 			tmp += '%s ' % status['file']
-		return '%s[%s/%s]' % (tmp, status['position'], status['duration'])
+		return '%s[%s/%s]' % (tmp, fmt_time(status['position']), fmt_time(status['duration']))
 	return None
 
 def cmus_command(*args):
