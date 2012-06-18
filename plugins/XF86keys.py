@@ -28,7 +28,8 @@ for mode in keys.modelist:
 		('XF86HomePage',		lambda k: try_launch('webBrowser')),
 		('XF86Mail',			lambda k: try_launch('emailClient')),
 		('XF86Eject',			lambda k: try_launch('eject')),
-		('XF86TouchpadToggle',		lambda k: toggle_trackpad()),
+		('XF86TouchpadToggle',		lambda k: toggle_input_device('trackpad')),
+		('Shift-XF86TouchpadToggle',	lambda k: toggle_input_device('trackpoint')),
 	),)
 
 #try:
@@ -94,9 +95,9 @@ def toggle_volume_grab():
 	keys.mode = keys.mode
 
 @notify_exception
-def toggle_trackpad():
+def toggle_input_device(device):
 	import trackpad
-	trackpad.toggle_trackpad()
+	getattr(trackpad, 'toggle_%s'%device)()
 
 @notify_exception
 def locknow():
