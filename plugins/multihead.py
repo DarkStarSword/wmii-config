@@ -109,18 +109,22 @@ def find_window(args=''):
 		notify('Usage: find_window title', 'find_window')
 		return
 
+	found = False
 	for c in client.readdir('/client'):
 		window = Client(c.name)
 		if window.label.find(args) >= 0:
-			if '+' not in window.tags:
-				tag = Tag(window.tags)
-				Tags().select(tag)
-				tag.selclient = window
+			if not found:
+				found = True
+				if '+' not in window.tags:
+					tag = Tag(window.tags)
+					Tags().select(tag)
+					tag.selclient = window
+					continue
 			thread = threading.Thread(target=flash_window, args=(window,), name='flash_window %s' % hex(window.id))
 			thread.daemon = True
 			thread.start()
-			return
-	notify('No windows found matching "%s"' % args, 'find_window')
+	if not found:
+		notify('No windows found matching "%s"' % args, 'find_window')
 
 def registerActions():
 	import wmiirc
