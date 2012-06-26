@@ -5,7 +5,7 @@ from pluginmanager import notify_exception, notify
 from pygmi import *
 
 @notify_exception
-def find_lost_windows(args=''):
+def recover_lost_windows(args=''):
 	import wmiirc
 	dest = '0'
 	for tag in wmiirc.tags.tags.values():
@@ -124,7 +124,7 @@ def find_window(args=''):
 
 def registerActions():
 	import wmiirc
-	wmiirc.Actions.find_lost_windows = find_lost_windows
+	wmiirc.Actions.recover_lost_windows = recover_lost_windows
 	wmiirc.Actions.send_all_tags = send_all_tags
 	wmiirc.Actions.find_window = find_window
 
