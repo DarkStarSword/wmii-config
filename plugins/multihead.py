@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from pluginmanager import notify_exception
+from pluginmanager import notify_exception, notify
 
 from pygmi import *
 
@@ -85,10 +85,48 @@ def send_all_tags(args=''):
 		tag.selcol.mode = 'default' # I think it is reasonable for most cases
 		tag.select(selected[tag.id])
 
+def flash_window(window):
+	import time
+	for i in range(10):
+		window.urgent = True
+		time.sleep(0.1)
+		window.urgent = False
+		time.sleep(0.1)
+
+def find_window(args=''):
+	# Yes, there are five different "clients" here (hey, I only named two of these!):
+	# client = wmii plan9 filesystem client
+	# /client = directory in the wmii plan9 filesystem listing all the X11 clients
+	# c = A directory in the wmii /client plan9 directory, which refers to an X11 client
+	# Client = class representing an X11 client in wmii to abstract the plan9 filesystem interface
+	# window = An instantiated Client
+	# oh_god_no_more_clients = plea for better naming conventions
+	# Tags, Tag & tag = more sensible
+	from pygmi import client, Client, Tags, Tag
+	import threading
+
+	if not args:
+		notify('Usage: find_window title', 'find_window')
+		return
+
+	for c in client.readdir('/client'):
+		window = Client(c.name)
+		if window.label.find(args) >= 0:
+			if '+' not in window.tags:
+				tag = Tag(window.tags)
+				Tags().select(tag)
+				tag.selclient = window
+			thread = threading.Thread(target=flash_window, args=(window,), name='flash_window %s' % hex(window.id))
+			thread.daemon = True
+			thread.start()
+			return
+	notify('No windows found matching "%s"' % args, 'find_window')
+
 def registerActions():
 	import wmiirc
 	wmiirc.Actions.find_lost_windows = find_lost_windows
 	wmiirc.Actions.send_all_tags = send_all_tags
+	wmiirc.Actions.find_window = find_window
 
 if __name__ == '__main__':
 	import sys
