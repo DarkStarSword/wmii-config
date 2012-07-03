@@ -37,6 +37,17 @@ keys.unbind('main', '%(mod)s-Shift-o')
 
 background.set_background(os.path.expanduser('~/desktop.jpg'))
 
+# Pass the environment through, to prevent xterm manufacturing a new
+# environment that includes LINES and COLS, which causes issues for curses
+# applications:
+keys.unbind('main', '%(mod)s-Return')
+terminal = 'wmiir', 'setsid', 'xterm'
+keys.bind('main', (
+	"Running programs",
+	('%(mod)s-Return', "Launch a terminal",
+		lambda k: call(*terminal, background=True, env=os.environ)),
+	))
+
 keys.bind('main', (
 	"Ian's custom key bindings",
 	# q is unbound
