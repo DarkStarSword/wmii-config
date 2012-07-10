@@ -12,7 +12,10 @@ xautolock = None
 
 def selfFile():
 	import os
-	return os.path.realpath(__file__)
+	tmp = os.path.realpath(__file__)
+	if tmp.endswith('.pyc'):
+		return tmp[:-1]
+	return tmp
 
 import atexit
 @atexit.register # NOTE: Does not handle signals or abnormal process termination
