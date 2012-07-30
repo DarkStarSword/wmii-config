@@ -27,17 +27,20 @@ def changeDisplays():
 		subprocess.call('xrandr -s 1600x900'.split())
 		background.set_background()
 		_launch(wmiirc.tray + ('-SE',))
+		subprocess.call('dispwin -I /home/ian/colorhug/results/w510/w510.icc'.split())
 	elif profile == 'work':
 		#subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
 		#subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
 		subprocess.call('xrandr -s 3200x1200'.split())
 		background.set_background()
 		_launch(wmiirc.tray + ('-SE',))
+		subprocess.call('dispwin -I /home/ian/colorhug/results/left/thinkvision_l.icc'.split())
 	elif profile == 'home':
 		# REMEMBER: Reconfigure meta-modes & associated DPYs first!
 		subprocess.call('xrandr -s 3520x1080'.split())
 		background.set_background()
 		_launch(wmiirc.tray + ('-SE',))
+		subprocess.call('dispwin -I /home/ian/colorhug/results/samsung/samsung.icc'.split())
 	elif profile == 'xrandr':
 		display.changeDisplays()
 
