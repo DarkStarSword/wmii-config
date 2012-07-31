@@ -75,11 +75,11 @@ def do_ad_blacklist(artist, title):
 	if artist in ad_blacklist or (artist, title) in ad_blacklist:
 		if not _blacklist_mute:
 			_blacklist_mute = True
-			pulse.PulseAppVolume('Spotify', mute=True)
+			pulse.PulseAppVolume()('Spotify', mute=True)
 		return ' (AD MUTED)'
 	elif _blacklist_mute:
 		_blacklist_mute = False
-		pulse.PulseAppVolume('Spotify', mute=False)
+		pulse.PulseAppVolume()('Spotify', mute=False)
 	return ''
 
 
@@ -113,12 +113,15 @@ def spotify_command(command):
 def spotify_pulse_vol(delta):
 	# TODO: If spotify is not connected, redirect command back to mixer
 	import pulse
-	pulse.PulseAppVolume('Spotify', vol_delta=delta)
+	(vol, mute) = pulse.PulseAppVolume()('Spotify', vol_delta=delta)
+	return '%.0f%%' % (vol*100.0)
 
 def spotify_pulse_mute():
 	# TODO: If spotify is not connected, redirect command back to mixer
 	import pulse
-	pulse.PulseAppVolume('Spotify', toggle_mute=True)
+	(vol, mute) = pulse.PulseAppVolume()('Spotify', toggle_mute=True)
+	if not mute:
+		return '%.0f%%' % (vol*100.0)
 
 commands = {
 	'Play': lambda: spotify_command('Play'),

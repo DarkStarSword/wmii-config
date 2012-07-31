@@ -17,7 +17,16 @@
 from pulseaudio import lib_pulseaudio as _lib
 
 class PulseAppVolume(object):
-	def __init__(self, app_name, vol_delta=None, toggle_mute=False, mute=None):
+	def __call__(self, app_name, vol_delta=None, toggle_mute=False, mute=None):
+		"""
+		Adjust the volume of a given application stream in pulseaudio
+
+		WARNING: Not thread safe! This is really intended to be
+		instantiated, called once, then thrown away (treat it like a
+		function - it's only a class because it needs some internal
+		state passed to and from the various callbacks)
+		"""
+
 		# Is there a way to do these with decorators?
 		# The problem is that transforming these into pa_... types can
 		# only occur when the class is instantiated (and the functions
@@ -41,7 +50,12 @@ class PulseAppVolume(object):
 		self.toggle_mute = toggle_mute
 		self.mute = mute
 
+		self.ret_vol = None
+		self.ret_mute = None
+
 		self._main()
+
+		return (self.ret_vol, self.ret_mute)
 
 	#@_lib.pa_context_success_cb_t - see note above
 	def _finished_callback(self, context, success, userdata):
@@ -51,14 +65,14 @@ class PulseAppVolume(object):
 	def _vol(self, context, sink_input_info):
 		vol = sink_input_info.volume
 
-		linear_vol = _lib.pa_sw_volume_to_linear(vol.values[0])
-		linear_vol += self.vol_delta
-		_lib.pa_cvolume_set(vol, vol.channels, _lib.pa_sw_volume_from_linear(linear_vol))
+		self.ret_vol += self.vol_delta
+		_lib.pa_cvolume_set(vol, vol.channels, _lib.pa_sw_volume_from_linear(self.ret_vol))
 
 		op = _lib.pa_context_set_sink_input_volume(context, sink_input_info.index, vol, self._finished_callback, None)
 		_lib.pa_operation_unref(op)
 
 	def _mute(self, context, sink_input_info, mute):
+		self.ret_mute = mute
 		op = _lib.pa_context_set_sink_input_mute(context, sink_input_info.index, mute, self._finished_callback, None)
 		_lib.pa_operation_unref(op)
 
@@ -70,6 +84,9 @@ class PulseAppVolume(object):
 		if eol: return
 		# print 'SINK IN', info.contents.name
 		if info.contents.name == self.app_name:
+			self.ret_vol = _lib.pa_sw_volume_to_linear(
+					_lib.pa_cvolume_avg(info.contents.volume))
+			self.ret_mute = info.contents.mute
 			if self.vol_delta is not None:
 				self._vol(context, info.contents)
 			if self.toggle_mute:
@@ -103,7 +120,7 @@ class PulseAppVolume(object):
 
 
 if __name__ == '__main__':
-	PulseAppVolume('Spotify', -0.05)
-	#PulseAppVolume('Spotify', toggle_mute=True)
-	#PulseAppVolume('Spotify', mute=False)
-	#PulseAppVolume('Spotify', 0.05, toggle_mute=True)
+	print PulseAppVolume()('Spotify', -0.05)
+	#print PulseAppVolume()('Spotify', toggle_mute=True)
+	#print PulseAppVolume()('Spotify', mute=False)
+	#print PulseAppVolume()('Spotify', 0.05, toggle_mute=True)
