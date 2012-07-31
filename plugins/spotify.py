@@ -10,6 +10,16 @@ import wmiidbus
 import dbus
 
 vol_delta = 0.05
+ad_blacklist = [
+		# Spotify keeps playing Justin Beiber at me, which is not
+		# healthy for my sanity. It's like Rickrolling, only worse
+		#
+		# These can either be single strings for the artist name, or
+		# tuples of (artist, title) pairs
+		#
+		# TODO: Add other known ads as I come across them
+		('Spotify', 'Spotify'),
+	]
 
 if __name__ == '__main__':
 	print "Don't call me directly"
@@ -57,18 +67,41 @@ def is_playing():
 	except dbus.DBusException:
 		return False
 
+_blacklist_mute = False
+def do_ad_blacklist(artist, title):
+	import pulse
+	global _blacklist_mute
+
+	if artist in ad_blacklist or (artist, title) in ad_blacklist:
+		if not _blacklist_mute:
+			_blacklist_mute = True
+			pulse.PulseAppVolume('Spotify', mute=True)
+		return ' (AD MUTED)'
+	elif _blacklist_mute:
+		_blacklist_mute = False
+		pulse.PulseAppVolume('Spotify', mute=False)
+	return ''
+
+
 def status():
+	# TODO: Since we don't have times, we would be better off subscribing
+	# to the track change dbus notification and skipping the constant
+	# polling
 	if is_playing():
+		(artist, title) = (None, None)
 		metadata = spotify_info()
 		tmp = ''
 		if 'xesam:artist' in metadata and metadata['xesam:artist']:
-			tmp += '%s ' % metadata['xesam:artist']
+			artist = metadata['xesam:artist']
+			tmp += '%s ' % artist
 			if 'xesam:title' in metadata and metadata['xesam:title']:
 				tmp += '- '
 		if 'xesam:title' in metadata and metadata['xesam:title']:
-			tmp += '%s ' % metadata['xesam:title']
+			title = metadata['xesam:title']
+			tmp += '%s ' % title
 		else:
 			tmp += '%s ' % status['url']
+		tmp += do_ad_blacklist(artist, title)
 		return tmp
 		#return '%s[%s/%s]' % (tmp, status['position'], status['duration'])
 	return None
