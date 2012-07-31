@@ -9,6 +9,8 @@ import music
 import wmiidbus
 import dbus
 
+vol_delta = 0.05
+
 if __name__ == '__main__':
 	print "Don't call me directly"
 	sys.exit(0)
@@ -75,15 +77,25 @@ def spotify_command(command):
 	spotify = get_spotify_interface()
 	getattr(spotify, command)()
 
+def spotify_pulse_vol(delta):
+	# TODO: If spotify is not connected, redirect command back to mixer
+	import pulse
+	pulse.PulseAppVolume('Spotify', vol_delta=delta)
+
+def spotify_pulse_mute():
+	# TODO: If spotify is not connected, redirect command back to mixer
+	import pulse
+	pulse.PulseAppVolume('Spotify', toggle_mute=True)
+
 commands = {
 	'Play': lambda: spotify_command('Play'),
 	'Play/Pause': lambda: spotify_command('PlayPause'),
 	'Stop': lambda: spotify_command('Stop'),
 	'Previous Track': lambda: spotify_command('Previous'),
 	'Next Track': lambda: spotify_command('Next'),
-	#'Volume Up': unimplemented,
-	#'Volume Down': unimplemented,
-	#'Mute': unimplemented,
+	'Volume Up': lambda: spotify_pulse_vol(vol_delta),
+	'Volume Down': lambda: spotify_pulse_vol(-vol_delta),
+	'Mute': lambda: spotify_pulse_mute(),
 }
 
 music.register_music_backend('spotify', module)
