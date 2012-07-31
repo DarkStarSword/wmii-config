@@ -64,8 +64,8 @@ class LibraryLoader(object):
         for name in platform_names:
             try:
                 lib = ctypes.cdll.LoadLibrary(name)
-                #if _debug_lib:
-                print "Loaded library :", name
+		if _debug_lib:
+			print "Loaded library :", name
                 #if _debug_trace:
                 #    lib = _TraceLibrary(lib)
                 return lib

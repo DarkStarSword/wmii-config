@@ -22,10 +22,6 @@ ad_blacklist = [
 		('Indies ANZ (InHouse)', 'Tiesto'),
 	]
 
-if __name__ == '__main__':
-	print "Don't call me directly"
-	sys.exit(0)
-
 def unload():
 	music.unregister_music_backend('spotify')
 
@@ -83,28 +79,30 @@ def do_ad_blacklist(artist, title):
 		pulse.PulseAppVolume()('Spotify', mute=False)
 	return ''
 
+def _status():
+	(artist, title) = (None, None)
+	metadata = spotify_info()
+	tmp = ''
+	if 'xesam:artist' in metadata and metadata['xesam:artist']:
+		artist = metadata['xesam:artist']
+		tmp += '%s ' % artist
+		if 'xesam:title' in metadata and metadata['xesam:title']:
+			tmp += '- '
+	if 'xesam:title' in metadata and metadata['xesam:title']:
+		title = metadata['xesam:title']
+		tmp += '%s ' % title
+	else:
+		tmp += '%s ' % status['url']
+	tmp += do_ad_blacklist(artist, title)
+	return tmp
+	#return '%s[%s/%s]' % (tmp, status['position'], status['duration'])
 
 def status():
 	# TODO: Since we don't have times, we would be better off subscribing
 	# to the track change dbus notification and skipping the constant
 	# polling
 	if is_playing():
-		(artist, title) = (None, None)
-		metadata = spotify_info()
-		tmp = ''
-		if 'xesam:artist' in metadata and metadata['xesam:artist']:
-			artist = metadata['xesam:artist']
-			tmp += '%s ' % artist
-			if 'xesam:title' in metadata and metadata['xesam:title']:
-				tmp += '- '
-		if 'xesam:title' in metadata and metadata['xesam:title']:
-			title = metadata['xesam:title']
-			tmp += '%s ' % title
-		else:
-			tmp += '%s ' % status['url']
-		tmp += do_ad_blacklist(artist, title)
-		return tmp
-		#return '%s[%s/%s]' % (tmp, status['position'], status['duration'])
+		return _status()
 	return None
 
 def spotify_command(command):
@@ -135,4 +133,11 @@ commands = {
 	'Mute': lambda: spotify_pulse_mute(),
 }
 
-music.register_music_backend('spotify', module)
+if __name__ == '__main__':
+	print
+	print _status()
+	print # pygmi usually runs into a threading issue while shutting down
+	wmiidbus.unload()
+	sys.exit(0)
+elif imported_from_wmiirc():
+	music.register_music_backend('spotify', module)

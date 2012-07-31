@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import pluginmanager
-from pluginmanager import notify, notify_exception, async
+from pluginmanager import notify, notify_exception, async, imported_from_wmiirc
 
 from pygmi import defmonitor, wmii
 
@@ -113,6 +113,7 @@ def init():
 		try: pluginmanager._load_plugin(plugin)
 		except: pass
 
-init()
-try: init_status()
-except: pass
+if imported_from_wmiirc():
+	init()
+	try: init_status()
+	except: pass

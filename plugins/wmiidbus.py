@@ -72,11 +72,9 @@ def start_main_loop():
 def unload():
 	global _main_loop, _session_bus, _thread
 
-	notify('WARNING: wmiidbus unload called, this is completely untested!')
-
 	if _main_loop is not None:
-		with _main_loop_lock():
-			if _main_loop() is not None:
+		with _main_loop_lock:
+			if _main_loop is not None:
 				_main_loop.quit()
 			_main_loop = None
 	if _session_bus is not None:
