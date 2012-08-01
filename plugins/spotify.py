@@ -19,8 +19,9 @@ ad_blacklist = [
 		#
 		# TODO: Add other known ads as I come across them
 		('Spotify', 'Spotify'),
-		"McDonald's", # "Social Playlist By Macca's"
-		"CBA",        # "Commbank Can"
+		"McDonald's",                     # "Social Playlist By Macca's"
+		"CBA",                            # "Commbank Can"
+		"Commonwealth Bank of Australia", # "Commbank Can"
 		('Indies ANZ (InHouse)', 'Tiesto'),
 		('EMI Music Australia (InHouse)', 'Blur'),
 		# Hmmm... What's the deal with the (InHouse) prefix here? I
