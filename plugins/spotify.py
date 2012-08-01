@@ -4,7 +4,7 @@ import subprocess
 import sys
 module = sys.modules[__name__]
 
-from pluginmanager import notify_exception
+from pluginmanager import notify_exception, imported_from_wmiirc
 import music
 import wmiidbus
 import dbus
