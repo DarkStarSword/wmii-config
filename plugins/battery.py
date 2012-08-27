@@ -3,6 +3,8 @@
 from pluginmanager import notify_exception
 from pygmi import defmonitor, wmii
 
+import os
+
 sysdir='/sys/class/power_supply/BAT0'
 
 def set_unknown_anim_colours(state, percent):
@@ -63,7 +65,7 @@ def sysfs_read(*args):
 
 phase = -1
 cphase = -1
-@defmonitor
+# @defmonitor
 @notify_exception
 def battery(self):
 	global phase, cphase
@@ -117,3 +119,6 @@ def battery(self):
 		eta = ''
 
 	return state_colours, '%i%% %s%s' % (percent, eta, state_anim[phase])
+
+if os.path.exists(sysdir):
+	battery = defmonitor(battery)
