@@ -8,6 +8,8 @@ import lock
 
 import os
 
+xmodmap_delay = 0.7
+
 # Reverse coloured/B+W keys
 term_large_font = '-fa Monospace -fs 24'.split()
 keys.bind('main', (
@@ -43,13 +45,25 @@ keys.bind('main', (
 	))
 
 @notify_exception
-def fixX11():
-	notify("Applying X11 settings")
+def do_xmodmap():
 	_launch(['xmodmap', os.path.expanduser('~/.xmodmaprc')])
+	# For debugging:
+	# import subprocess, sys
+	# print 'xmodmap returned: %i' % subprocess.call(['xmodmap', '-verbose', os.path.expanduser('~/.xmodmaprc')], stdout=sys.stdout, stderr=sys.stderr)
+
+@notify_exception
+def fixX11():
+	import threading
+
+	notify("Applying X11 settings")
 	_launch("setxkbmap -option terminate:ctrl_alt_bksp".split())
 	_launch("setxkbmap -option keypad:pointerkeys".split())
 
 	wacom.apply_profile('Wacom Intuos3 9x12 pad', 'gimp')
+
+	t = threading.Timer(xmodmap_delay, do_xmodmap)
+	t.daemon = True
+	t.start()
 
 lock.disableAutoLock()
 fixX11()
