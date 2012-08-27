@@ -61,7 +61,8 @@ def spotify_info():
 	spotify = get_spotify_interface()
 	#m = spotify.GetMetadata() # org.freedesktop.MediaPlayer2 API
 	m = spotify.Get('org.mpris.MediaPlayer2.Player', 'Metadata')
-	return { str(x): str(m[x][0]) if isinstance(m[x], dbus.Array) else str(m[x]) for x in m }
+	# return { str(x): str(m[x][0]) if isinstance(m[x], dbus.Array) else str(m[x]) for x in m }
+	return dict([ (str(x), str(m[x][0]) if isinstance(m[x], dbus.Array) else str(m[x])) for x in m ])
 
 def is_playing():
 	try:
