@@ -1,14 +1,26 @@
 from pygmi import *
 
 from pluginmanager import notify, notify_exception
-from launch import launch, _launch
+from launch import launch, _launch, terminal
 import wacom
 import wmiirc
 import lock
 
 import os
 
+# Reverse coloured/B+W keys
+term_large_font = '-fa Monospace -fs 24'.split()
 keys.bind('main', (
+	"Running programs",
+	('%(mod)s-Return', "Launch a terminal (Black + White)",
+		lambda k: launch(terminal(bw = True))),
+	('%(mod)s-Shift-Return', "Launch a terminal (Black, White & Large)",
+		lambda k: launch(terminal(bw = True, font = term_large_font))),
+	('%(mod)s-Control-Return', "Launch a terminal (Normal)",
+		lambda k: launch(terminal())),
+	('%(mod)s-Control-Shift-Return', "Launch a terminal (Large)",
+		lambda k: launch(terminal(font = term_large_font))),
+
 	"Mac Mini specific keys",
 	('Mod1-Control-x', "Re-apply X11 settings",
 		lambda k: fixX11()),
