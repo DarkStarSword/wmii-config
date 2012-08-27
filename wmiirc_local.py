@@ -37,15 +37,22 @@ keys.unbind('main', '%(mod)s-Shift-o')
 
 background.set_background(os.path.expanduser('~/desktop.jpg'))
 
-# Pass the environment through, to prevent xterm manufacturing a new
-# environment that includes LINES and COLS, which causes issues for curses
-# applications:
+# Rebind mod+return, as the default wmiirc.py does not pass the environment
+# through, leading xterm to manufacture a new environment that includes LINES
+# and COLS, which causes issues for curses applications. Our launch.py plygin
+# passes os.environ through to avoid the issue.
 keys.unbind('main', '%(mod)s-Return')
-terminal = 'wmiir', 'setsid', 'xterm'
+term_large_font = '-fa Monospace -fs 24'.split()
 keys.bind('main', (
 	"Running programs",
 	('%(mod)s-Return', "Launch a terminal",
-		lambda k: call(*terminal, background=True, env=os.environ)),
+		lambda k: launch(terminal())),
+	('%(mod)s-Shift-Return', "Launch a terminal (Large)",
+		lambda k: launch(terminal(font = term_large_font))),
+	('%(mod)s-Control-Return', "Launch a terminal (Black + White)",
+		lambda k: launch(terminal(bw = True))),
+	('%(mod)s-Control-Shift-Return', "Launch a terminal (Black, White & Large)",
+		lambda k: launch(terminal(bw = True, font = term_large_font))),
 	))
 
 keys.bind('main', (

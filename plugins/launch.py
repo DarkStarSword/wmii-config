@@ -5,27 +5,30 @@ from pluginmanager import notify, notify_exception, async, imported_from_wmiirc
 from pygmi import call
 
 class terminal(tuple):
-	def __new__(self, command, bw=False, sleep=False):
+	def __new__(self, command = None, bw=False, font = [], sleep=False):
 		if imported_from_wmiirc():
 			import wmiirc
 			term = wmiirc.terminal
 		else:
 			term = ['wmiir', 'setsid', 'xterm']
-		# sleep = True # wtf is going on? Today just about everything needs this workaround to get the size right initially and doesn't resize properly, partially fixed by unset ROWS and COLUMNS in .zshenv
 
 		if isinstance(command, str):
 			command = [command]
 		if isinstance(command, list):
-			orig_command = command[:]
+			orig_command = ' '.join(command)
+			title = ['-title', orig_command]
 			if sleep:
 				command[0] = 'sleep 0.1;' + command[0]
+			command = ['-e'] + command
+		elif command is None:
+			orig_command = term[-1]
+			title = command = []
 		else:
 			raise TypeError(type(command))
 
 		colours = '-bg Black -fg White'.split() if bw else ''
-		orig_command = ' '.join(orig_command)
 
-		tmp = super(self, terminal).__new__(self, list(term) + list(colours) + ['-title', orig_command, '-e'] + list(command))
+		tmp = tuple.__new__(self, list(term) + list(colours) + list(font) + list(title) + list(command))
 		tmp.command = orig_command
 		return tmp
 
