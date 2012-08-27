@@ -5,10 +5,11 @@ from pluginmanager import notify, notify_exception
 import dbus
 import subprocess
 import wmiidbus
-from pygmi import wmii
+from pygmi import wmii, Colors
 
 # American spelling is only for consistency with other wmii['...colors']:
 if 'msgcolors' not in wmii.cache:
+	wmii.ctl_types['msgcolors'] = (Colors.from_string, lambda c: str(Colors(*c)))
 	wmii['msgcolors'] = '#FFFFFF', '#2222FF', '#333333'
 	# TODO: Animate once notify supports this
 	#wmii['msgcolors'] = [('#FFFFFF', '#2222FF', '#333333'), ('#000088', '#8888FF', '#CCCCFF')]
