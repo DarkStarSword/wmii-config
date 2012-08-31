@@ -7,6 +7,7 @@ from pygmi import defmonitor, wmii
 
 autoloadMusicBackends = ['moc', 'cmus', 'spotify']
 registeredMusicBackends = {}
+last_music_player = None
 
 if __name__ == '__main__':
 	import sys
@@ -30,10 +31,13 @@ def register_music_backend(name, module):
 
 @notify_exception
 def unregister_music_backend(name):
+	global last_music_player
+
+	if last_music_player == name:
+		last_music_player = None
 	if name in registeredMusicBackends:
 		del registeredMusicBackends[name]
 
-last_music_player = None
 def music_player_running():
 	global last_music_player
 
@@ -119,6 +123,11 @@ def init_status(player = None):
 			return
 	if isinstance(player, str): # launch passes the player name, which may not have finished init yet
 		player = registeredMusicBackends[player]
+
+	if last_music_player and \
+			last_music_player != player.name and \
+			registeredMusicBackends[last_music_player].is_playing():
+		return
 
 	last_music_player = player.name
 
