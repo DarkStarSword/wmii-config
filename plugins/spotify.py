@@ -23,9 +23,9 @@ ad_blacklist = [
 		"McDonald's",                     # "Social Playlist By Macca's"
 		"CBA",                            # "Commbank Can"
 		"Commonwealth Bank of Australia", # "Commbank Can"
-		('Indies ANZ (InHouse)', 'Tiesto'),
-		('EMI Music Australia (InHouse)', 'Blur'),
-		('Sony Music Australia (InHouse)', 'Top Of The Charts'),
+		'Indies ANZ (InHouse)',           # 'Tiesto'
+		'EMI Music Australia (InHouse)',  # 'Blur', 'Ricki Lee'
+		'Sony Music Australia (InHouse)'  # 'Top Of The Charts'
 		# Hmmm... What's the deal with the (InHouse) prefix here? I
 		# could pattern match on that...
 	]
