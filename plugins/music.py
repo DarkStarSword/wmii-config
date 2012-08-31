@@ -34,9 +34,15 @@ def unregister_music_backend(name):
 		del registeredMusicBackends[name]
 
 def music_player_running():
+	running = []
 	for (name, module) in registeredMusicBackends.items():
 		if module.is_running():
+			running.append((name, module))
+	for (name, module) in running:
+		if module.is_playing():
 			return (name, module)
+	if running != []:
+		return running[0]
 	return (None, None)
 
 def is_playing():
