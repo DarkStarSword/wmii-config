@@ -3,6 +3,7 @@
 import subprocess
 import sys
 module = sys.modules[__name__]
+name = 'mocp'
 
 from pluginmanager import notify_exception
 import music
@@ -14,7 +15,7 @@ if __name__ == '__main__':
 	sys.exit(0)
 
 def unload():
-	music.unregister_music_backend('mocp')
+	music.unregister_music_backend(name)
 
 def is_running():
 	try:
@@ -83,4 +84,4 @@ commands = {
 	'Mute': mute
 }
 
-music.register_music_backend('mocp', module)
+music.register_music_backend(name, module)

@@ -33,25 +33,26 @@ def unregister_music_backend(name):
 	if name in registeredMusicBackends:
 		del registeredMusicBackends[name]
 
-last_music_player = (None, None)
+last_music_player = None
 def music_player_running():
 	global last_music_player
 
-	running = []
+	running = {}
 	for (name, module) in registeredMusicBackends.items():
 		if module.is_running():
-			running.append((name, module))
+			running[name] = module
 
-	for (name, module) in running:
+	for (name, module) in running.items():
 		if module.is_playing():
-			last_music_player = (name, module)
-			return last_music_player
+			last_music_player = name
+			return (name, module)
 
-	if running == []:
-		last_music_player = (None, None)
+	if running == {}:
+		last_music_player = None
+		return (None, None)
 	elif last_music_player not in running:
-		last_music_player = running[0]
-	return last_music_player
+		last_music_player = running.keys()[0]
+	return (last_music_player, running[last_music_player])
 
 def is_playing():
 	(name, player) = music_player_running()
@@ -110,12 +111,16 @@ music_status.status_failures = 0
 
 @notify_exception
 def init_status(player = None):
+	global last_music_player
+
 	if player is None:
 		(name, player) = music_player_running()
 		if player is None:
 			return
 	if isinstance(player, str): # launch passes the player name, which may not have finished init yet
 		player = registeredMusicBackends[player]
+
+	last_music_player = player.name
 
 	if hasattr(player, 'status'):
 		music_status.status = player.status

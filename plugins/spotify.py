@@ -3,6 +3,7 @@
 import subprocess
 import sys
 module = sys.modules[__name__]
+name = 'spotify'
 
 from pluginmanager import notify_exception, imported_from_wmiirc
 import music
@@ -30,7 +31,7 @@ ad_blacklist = [
 	]
 
 def unload():
-	music.unregister_music_backend('spotify')
+	music.unregister_music_backend(name)
 
 _spotify = None
 def get_spotify_interface():
@@ -148,4 +149,4 @@ if __name__ == '__main__':
 	wmiidbus.unload()
 	sys.exit(0)
 elif imported_from_wmiirc():
-	music.register_music_backend('spotify', module)
+	music.register_music_backend(name, module)
