@@ -8,6 +8,8 @@ name = 'mocp'
 from pluginmanager import notify_exception
 import music
 
+import python-compat
+
 vol_delta = 5
 
 if __name__ == '__main__':

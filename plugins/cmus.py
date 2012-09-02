@@ -8,6 +8,8 @@ name = 'cmus'
 from pluginmanager import notify_exception
 import music
 
+import python-compat
+
 vol_delta = 5
 _last_vol = 100
 
