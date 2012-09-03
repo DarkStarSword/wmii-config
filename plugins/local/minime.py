@@ -1,6 +1,6 @@
 from pygmi import *
 
-from pluginmanager import notify, notify_exception
+from pluginmanager import notify, notify_exception, imported_from_wmiirc
 from launch import launch, _launch, terminal
 import wacom
 import wmiirc
@@ -64,6 +64,11 @@ def fixX11():
 	t = threading.Timer(xmodmap_delay, do_xmodmap)
 	t.daemon = True
 	t.start()
+
+if imported_from_wmiirc():
+  import wmiirc
+  # xfontsel to find these types:
+  wmiirc.wmii['font'] = '-*-helvetica-bold-r-*-*-34-*-*-*-*-*-*-*'
 
 lock.disableAutoLock()
 fixX11()
