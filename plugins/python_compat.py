@@ -2,7 +2,7 @@
 
 import subprocess
 
-if not subprocess.hasattr('check_output'):
+def patch_subprocess():
     def check_output(*popenargs, **kwargs):
         r"""Run command with arguments and return its output as a byte string.
 
@@ -25,15 +25,18 @@ if not subprocess.hasattr('check_output'):
         """
         if 'stdout' in kwargs:
             raise ValueError('stdout argument not allowed, it will be overridden.')
-        process = Popen(stdout=PIPE, *popenargs, **kwargs)
+        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
             cmd = kwargs.get("args")
             if cmd is None:
                 cmd = popenargs[0]
-            raise CalledProcessError(retcode, cmd, output=output)
+            raise subprocess.CalledProcessError(retcode, cmd) #, output=output)
         return output
     subprocess.check_output = check_output
+
+if not hasattr(subprocess, 'check_output'):
+    patch_subprocess()
 
 # vim:expandtab:ts=4:sw=4
