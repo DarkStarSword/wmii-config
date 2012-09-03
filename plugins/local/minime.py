@@ -23,6 +23,10 @@ keys.bind('main', (
 	('%(mod)s-Control-Shift-Return', "Launch a terminal (Large)",
 		lambda k: launch(terminal(font = term_large_font))),
 
+	"Client actions",
+	('%(mod)s-Control-c', "Close client",
+		lambda k: Client('sel').kill()),
+
 	"Mac Mini specific keys",
 	('Mod1-Control-x', "Re-apply X11 settings",
 		lambda k: fixX11()),
