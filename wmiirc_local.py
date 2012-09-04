@@ -24,6 +24,22 @@ apps.mixer		= 'pavucontrol'
 apps.voip		= 'mumble'
 
 monitors['load'].active = False
+# Sometimes I see the load monitor remain displayed (but stopped).  Looking at
+# the pygmi code I'm pretty convinced that it's a race where the tick function
+# called from the timer can create the button after _set_active removes it.
+#
+# We can't just cancel the timer first - if the tick code was executing when we
+# cancelled the timer it would just set up a new timer. So, let's set active =
+# False, ensure the timer is stopped, then set active to False a second time to
+# ensure the button is gone.
+#
+# Really, pygmi.monitor._set_active should cancel and join the timer after
+# setting _active and before removing the button
+try:
+	monitors['load'].timer.cancel()
+	monitors['load'].timer.join()
+except: pass
+monitors['load'].active = False
 
 # Clean up showKeys for keys I'm going to override & actions I don't want
 keys.unbind('main', '%(mod)s-b')
