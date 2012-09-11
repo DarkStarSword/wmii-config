@@ -65,7 +65,7 @@ def apply_profile(device, profile):
 		raise AttributeError('%s mapping not found' % device)
 	if profile not in mappings[device]:
 		raise AttributeError('%s profile for %s not found' % (profile, device))
-	notify("Applying %s, %s profile" % (device, profile))
+	notify("Applying %s, %s profile" % (device, profile), 'wacom')
 
 	# Work around a bug in the wacom stack causing the buttons to override
 	# the strips (similar, but opposite to above bug note) by doing
@@ -73,4 +73,7 @@ def apply_profile(device, profile):
 	for i in range(2):
 		for (prop, action) in mappings[device][profile]:
 			# Wait for termination to avoid race:
-			subprocess.call(['xsetwacom', 'set', device] + prop.split() + [action])
+			try:
+				subprocess.call(['xsetwacom', 'set', device] + prop.split() + [action])
+			except OSError:
+				notify('xsetwacom not found', 'wacom')
