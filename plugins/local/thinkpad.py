@@ -28,27 +28,34 @@ def changeDisplays():
 	import subprocess
 	profile = Menu(['internal', 'work', 'home', 'xrandr'], prompt='Display Profile:')()
 	if profile == 'internal':
-		# New nVidia with xrandr 1.2:
+		#New nVidia with xrandr 1.2:
 		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
 		# subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
-		# Old nVidia with metamodes hack:
+		#Old nVidia with metamodes hack:
 		# subprocess.call('xrandr -s 1600x900'.split())
-		# Nouveau:
-		subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off --output DP-2 --off --output DP-3 --off'.split())
+		#Nouveau (two steps to work around this can't find crtc for display LVDS-1 bug):
+		subprocess.call('xrandr --output DP-1 --off --output DP-2 --off --output DP-3 --off'.split())
+		subprocess.call('xrandr --output LVDS-1 --mode 1600x900'.split())
 		background.set_background()
 		subprocess.call('dispwin -I /home/ian/colorhug/results/w510/w510.icc'.split())
 	elif profile == 'work':
-		# New nVidia with xrandr 1.2:
+		#New nVidia with xrandr 1.2:
 		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
 		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
-		# Old nVidia with metamodes hack:
+		#Old nVidia with metamodes hack:
 		# subprocess.call('xrandr -s 3200x1200'.split())
-		subprocess.call('xrandr --output LVDS-0 --off --output DP-1 --off --output DP-2 --mode 1600x1200 --output DP-3 --mode 1600x1200 --right-of DP-2'.split())
+		#Nouveau (two steps to work around this can't find crtc for display x bug):
+		subprocess.call('xrandr --output LVDS-1 --off --output DP-1 --off'.split())
+		subprocess.call('xrandr --output DP-2 --mode 1600x1200 --output DP-3 --mode 1600x1200 --right-of DP-2'.split())
 		background.set_background()
 		subprocess.call('dispwin -I /home/ian/colorhug/results/left/thinkvision_l.icc'.split())
 	elif profile == 'home':
-		# REMEMBER: Reconfigure meta-modes & associated DPYs first!
-		subprocess.call('xrandr -s 3520x1080'.split())
+		#Old nVidia with metamodes hack:
+		#REMEMBER: Reconfigure meta-modes & associated DPYs first!
+		# subprocess.call('xrandr -s 3520x1080'.split())
+		#Nouveau (untested,two steps to work around this can't find crtc for display x bug):
+		subprocess.call('xrandr --output DP-2 --off --output DP-3 --off'.split())
+		subprocess.call('xrandr --output DP-1 --mode 1920x1080 --output LVDS-1 --mode 1600x900 --right-of DP-1'.split())
 		background.set_background()
 		subprocess.call('dispwin -I /home/ian/colorhug/results/samsung/samsung.icc'.split())
 	elif profile == 'xrandr':
