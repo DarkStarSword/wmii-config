@@ -37,7 +37,9 @@ monitors['load'].active = False
 # setting _active and before removing the button
 try:
 	monitors['load'].timer.cancel()
-	monitors['load'].timer.join()
+	# We sometimes hang on a semaphore when starting wmii. I'm not certain,
+	# but I suspect this might be the culprit:
+	# monitors['load'].timer.join()
 except: pass
 monitors['load'].active = False
 
