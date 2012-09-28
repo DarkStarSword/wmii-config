@@ -47,7 +47,8 @@ def send_all_tags(args=''):
 	import time
 
 	client = Client(Client('sel').id)
-	(area, screen, col) = area_aso(client_area(Tag('sel'), client))
+	cur_tag = Tag('sel')
+	(area, screen, col) = area_aso(client_area(cur_tag, client))
 
 	all_tags = map(str, range(10))
 
@@ -66,6 +67,8 @@ def send_all_tags(args=''):
 	time.sleep(0.1) # Race: give wmii some time to create tags
 
 	for tag in [ Tag(t) for t in all_tags ]:
+		if tag == cur_tag:
+			continue
 		tag.send(client, '%s:1' % screen) # Make sure we at least end up on the right screen
 		tag.send(client, area)
 		(new_area, new_screen, new_col) = area_aso(client_area(tag, client))
