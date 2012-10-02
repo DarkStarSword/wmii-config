@@ -1,7 +1,30 @@
 #!/bin/echo Don't run me directly
 
 from pluginmanager import notify, notify_exception, async, imported_from_wmiirc
+import pygmi
 
+def replace_call(*args, **kwargs):
+    """
+    Fixes several issues with pygmi's call function:
+    - Passes environment through (fixes ncurses resize)
+    - Does not open pipes when launching tasks in the bakground (fixes tasks
+      hanging once the stdout/stderr buffers fill up)
+    """
+    import subprocess
+    import os
+
+    background = kwargs.pop('background', False)
+    input = kwargs.pop('input', None)
+    if background:
+        p = subprocess.Popen(args, cwd=os.environ['HOME'],
+                             close_fds=True, env=os.environ, **kwargs)
+    else:
+        p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, cwd=os.environ['HOME'],
+                             close_fds=True, env=os.environ, **kwargs)
+        return p.communicate(input)[0].rstrip('\n')
+
+pygmi.call = replace_call
 from pygmi import call
 
 class terminal(tuple):
@@ -43,7 +66,7 @@ def _launch(args, background=True, shell=False):
 		args = ('wmiir', 'setsid', args)
 	if shell:
 		args = (' '.join(args),)
-	call(*args, background=background, env=os.environ, shell=shell) # Passing os.environ fixes the LINES/COLUMNS bug... wtf?
+	call(*args, background=background, shell=shell)
 	# FIXME: Report missing apps - NOTE: xterm would always launch (and
 	# pygmi.call doesn't report failure), so I should actually check for
 	# existance
