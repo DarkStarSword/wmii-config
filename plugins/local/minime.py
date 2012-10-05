@@ -7,6 +7,7 @@ import wmiirc
 import lock
 
 import os
+import subprocess
 
 xmodmap_delay = 0.7
 
@@ -64,6 +65,8 @@ def fixX11():
 	_launch("setxkbmap -option keypad:pointerkeys".split())
 
 	wacom.apply_profile('Wacom Intuos3 9x12 pad', 'gimp')
+
+	subprocess.call('dispwin -I /home/dss/colorhug/results/samsung/samsung.icc'.split())
 
 	t = threading.Timer(xmodmap_delay, do_xmodmap)
 	t.daemon = True
