@@ -27,6 +27,7 @@ ad_blacklist = [
 		'EMI Music Australia (InHouse)',  # 'Blur', 'Ricki Lee'
 		'Sony Music Australia (InHouse)', # 'Top Of The Charts'
 		'Hyundai',                        # 'Hyundai i30'
+		'Red Rooster',                    # 'New Flatbreads - Davo'
 		# Hmmm... What's the deal with the (InHouse) prefix here? I
 		# could pattern match on that...
 	]
