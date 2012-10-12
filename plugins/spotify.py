@@ -30,6 +30,7 @@ ad_blacklist = [
 		'Red Rooster',                    # 'New Flatbreads - Davo'
 		'Microsoft',                      # 'Internet Explorer 9'
 		'Seek Learning',                  # 'Calling Compilations'
+		'Coca-Cola',                      # 'Music Moments'
 		# Hmmm... What's the deal with the (InHouse) prefix here? I
 		# could pattern match on that...
 	]
