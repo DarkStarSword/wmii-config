@@ -96,7 +96,7 @@ def flash_window(window):
 		window.urgent = False
 		time.sleep(0.1)
 
-def find_window(args=''):
+def _find_window(args='', recover=False):
 	# Yes, there are five different "clients" here (hey, I only named two of these!):
 	# client = wmii plan9 filesystem client
 	# /client = directory in the wmii plan9 filesystem listing all the X11 clients
@@ -118,6 +118,9 @@ def find_window(args=''):
 		if window.label.find(args) >= 0:
 			if not found:
 				found = True
+				if recover:
+					for tag in window.tags:
+						Tag(tag).send(window, "0:1")
 				if '+' not in window.tags:
 					tag = Tag(window.tags)
 					Tags().select(tag)
@@ -129,11 +132,18 @@ def find_window(args=''):
 	if not found:
 		notify('No windows found matching "%s"' % args, 'find_window')
 
+def find_window(args=''):
+	return _find_window(args, recover=False)
+
+def recover_window(args=''):
+	return _find_window(args, recover=True)
+
 def registerActions():
 	import wmiirc
 	wmiirc.Actions.recover_lost_windows = recover_lost_windows
 	wmiirc.Actions.send_all_tags = send_all_tags
 	wmiirc.Actions.find_window = find_window
+	wmiirc.Actions.recover_window = recover_window
 
 if __name__ == '__main__':
 	import sys
