@@ -5,6 +5,9 @@ from launch import launch, _launch
 import wacom
 import xdg
 import wmiirc
+import os
+
+os.environ['BROWSER'] = 'iceweasel'
 
 xdg.ignore_only_shown_in_filenames = ['ibm-asset-management.desktop', 'ibm-registration-tool.desktop']
 
@@ -29,26 +32,28 @@ def changeDisplays():
 	profile = Menu(['internal', 'work', 'home', 'xrandr'], prompt='Display Profile:')()
 	if profile == 'internal':
 		#New nVidia with xrandr 1.2:
-		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
-		# subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		subprocess.call('xrandr --output LVDS-0 --mode 1600x900 --output DP-1 --off            --output DP-2 --off'.split())
 		#Old nVidia with metamodes hack:
 		# subprocess.call('xrandr -s 1600x900'.split())
 		#Nouveau (two steps to work around this can't find crtc for display LVDS-1 bug):
-		subprocess.call('xrandr --output DP-1 --off --output DP-2 --off --output DP-3 --off'.split())
-		subprocess.call('xrandr --output LVDS-1 --mode 1600x900'.split())
+		# subprocess.call('xrandr --output DP-1 --off --output DP-2 --off --output DP-3 --off'.split())
+		# subprocess.call('xrandr --output LVDS-1 --mode 1600x900'.split())
 		background.set_background()
 		subprocess.call('dispwin -I /home/ian/colorhug/results/w510/w510.icc'.split())
 	elif profile == 'work':
 		#New nVidia with xrandr 1.2:
-		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
-		# subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --off'.split())
+		subprocess.call('xrandr --output LVDS-0 --off           --output DP-1 --mode 1600x1200 --output DP-2 --mode 1600x1200 --right-of DP-1'.split())
 		#Old nVidia with metamodes hack:
 		# subprocess.call('xrandr -s 3200x1200'.split())
 		#Nouveau (two steps to work around this can't find crtc for display x bug):
-		subprocess.call('xrandr --output LVDS-1 --off --output DP-1 --off'.split())
-		subprocess.call('xrandr --output DP-2 --mode 1600x1200 --output DP-3 --mode 1600x1200 --right-of DP-2'.split())
+		# subprocess.call('xrandr --output LVDS-1 --off --output DP-1 --off'.split())
+		# subprocess.call('xrandr --output DP-2 --mode 1600x1200 --output DP-3 --mode 1600x1200 --right-of DP-2'.split())
 		background.set_background()
-		subprocess.call('dispwin -I /home/ian/colorhug/results/left/thinkvision_l.icc'.split())
+		# This now works with binary nVidia:
+		subprocess.call('dispwin -d 2 -I /home/ian/colorhug/results/r_lut/thinkvision_r_lut.icc'.split())
+		subprocess.call('dispwin -d 1 -I /home/ian/colorhug/results/left/thinkvision_l.icc'.split())
 	elif profile == 'home':
 		#Old nVidia with metamodes hack:
 		#REMEMBER: Reconfigure meta-modes & associated DPYs first!
@@ -72,7 +77,7 @@ def fixX11():
 
 	wacom.apply_profile('Wacom Intuos3 9x12 pad', 'gimp')
 
-fixX11()
+# fixX11()
 
 keys.mode = keys.mode # Refresh current key bindings - only required when [re]loading plugin after event loop starts
 
